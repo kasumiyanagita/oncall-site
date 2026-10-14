@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>day-one → oncall</title>
+<meta name="description" content="Linux コマンドを、本物の bash で手を動かして身につける 2 つのターミナルアプリ。day-one で基礎を固め、oncall で障害対応に挑む。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add("js")</script>
+</head>
+<body>
+
+<nav class="topbar">
+  <span class="topbar-dots"><i></i><i></i><i></i></span>
+  <span class="topbar-title">you@terminal: ~</span>
+  <span class="topbar-links">
+    <a href="#flow">flow</a>
+    <a href="#day-one">day-one</a>
+    <a href="#oncall">oncall</a>
+    <a href="#start">start</a>
+  </span>
+</nav>
+
+<main>
+
+<!-- ================= HERO ================= -->
+<section class="screen hero" id="top">
+  <h1 class="logo" aria-label="day-one から oncall へ"><span class="hl-cyan">day-one</span><span class="logo-arrow">━▶</span><span class="hl-red">oncall</span></h1>
+  <div class="seq">
+    <p data-type class="cmdline"><span class="ps1">you@terminal:~$</span> whoami</p>
+    <p data-type class="out">新人。Linux のコマンドは、まだほとんど打ったことがない。</p>
+    <p data-type class="cmdline"><span class="ps1">you@terminal:~$</span> cat goal.txt</p>
+    <p data-type class="out lead">深夜にページャーが鳴っても、<br>落ち着いてサーバーに入り、<span class="hl-green">自分の手で原因を突き止められる</span>ようになる。</p>
+    <p data-type class="cmdline"><span class="ps1">you@terminal:~$</span> ls ~/apps</p>
+    <p data-type class="out"><span class="hl-cyan">day-one/</span>   <span class="hl-red">oncall/</span></p>
+    <p class="fade out sub">
+      Linux コマンドを、<strong>本物の bash</strong> で手を動かして身につける 2 つのターミナルアプリです。<br>
+      <span class="hl-cyan">day-one</span> で 1 つずつ基礎を固め、<span class="hl-red">oncall</span> で障害対応に挑みます。
+    </p>
+    <p class="fade hero-actions">
+      <a class="btn" href="#flow">./learn-flow.sh</a>
+      <a class="btn ghost" href="#start">./install.sh</a>
+    </p>
+  </div>
+</section>
+
+<!-- ================= FLOW ================= -->
+<section class="screen" id="flow">
+  <div class="seq">
+    <h2 data-type><span class="ps1">$</span> cat learning-path.md</h2>
+    <p data-type class="out">コマンドを「知る」から、組み合わせて「使いこなす」まで。2 つのアプリで段階的に進みます。</p>
+
+    <div class="fade path">
+      <div class="step step-dayone">
+        <div class="step-label">STEP 1 — 基礎固め</div>
+        <div class="step-name">day-one</div>
+        <ul>
+          <li>コマンドを <b>1 つずつ</b>、1〜2 分で</li>
+          <li>説明を読む → 打ってみる → お題を解く</li>
+          <li>全 38 個 / 間隔をあけた復習で定着</li>
+        </ul>
+        <div class="meter">
+          <span>oncall への準備</span>
+          <span class="bar"><i style="--p:100%"></i></span>
+          <span>29/29</span>
+        </div>
+      </div>
+
+      <div class="arrow" aria-hidden="true">
+        <span>━━━━▶</span>
+        <small>◆ の 29 個を<br>おぼえたら</small>
+      </div>
+
+      <div class="step step-oncall">
+        <div class="step-label">STEP 2 — 実践</div>
+        <div class="step-name">oncall</div>
+        <ul>
+          <li>壊れたサーバーで <b>障害対応</b></li>
+          <li>コマンドを <b>組み合わせて</b> 原因を特定</li>
+          <li>全 7 インシデント / S〜C のランク</li>
+        </ul>
+        <div class="meter">
+          <span>解決したインシデント</span>
+          <span class="bar"><i class="red" style="--p:0%"></i></span>
+          <span>0/7</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="fade timeline">
+      <li><span class="tl-n">01</span><div><b class="hl-cyan">day-one で 1 つずつ覚える</b><br>pwd、ls、cd から始めて、grep・awk・sed・find・kill まで。覚えたコマンドには <span class="hl-green">✓</span> が付き、翌日・3 日後・7 日後…と復習が回ってきます。</div></li>
+      <li><span class="tl-n">02</span><div><b class="hl-blue">◆ 印で「oncall で使うもの」が分かる</b><br>day-one の一覧で ◆ が付いた 29 個が、oncall のインシデントで使うコマンドです。覚えると「どのミッションで使うか」も案内されます。</div></li>
+      <li><span class="tl-n">03</span><div><b class="hl-yellow">oncall の見学で、組み立て方を見る</b><br>先輩が「短いコマンドを 1 つ確かめては、後ろに 1 つ足す」様子を、横で見られます。長いパイプがどう育つかを知ってから本番へ。</div></li>
+      <li><span class="tl-n">04</span><div><b class="hl-red">oncall で障害に挑む</b><br>ページャーが鳴り、壊れたサーバーへ。覚えたコマンドを組み合わせて原因を突き止め、ランクと模範解答で振り返ります。</div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= DAY-ONE ================= -->
+<section class="screen" id="day-one">
+  <div class="seq">
+    <h2 data-type><span class="ps1">$</span> dayone --about</h2>
+    <p data-type class="out lead"><span class="hl-cyan">day-one</span> — コマンドを 1 つずつ、実際に打って覚えるターミナルアプリ。</p>
+    <p data-type class="out">どんなコマンドがあり、何をするもので、いつ使うと便利なのかを、手を動かしながら知るためのものです。</p>
+
+    <div class="fade cols">
+      <div class="card">
+        <h3># 1 コマンド = 1〜2 分</h3>
+        <ol class="loop">
+          <li><span class="tag tag-purple">説明</span> 何をするコマンドか、いつ使うかを読む</li>
+          <li><span class="tag tag-cyan">打ってみよう</span> 案内どおりに試し打ち</li>
+          <li><span class="tag tag-green">お題</span> 自分で考えて解く。書き方は 1 通りでなくて OK</li>
+        </ol>
+        <p class="note">お題の中身(ファイル名や移動先)は、開くたびに変わります。</p>
+      </div>
+      <div class="card">
+        <h3># 忘れる前に、復習が来る</h3>
+        <p>お題に正解すると「おぼえた」になり、翌日に復習として再出題。ヒントなし・間違いなしで解けるたびに間隔が延びます。</p>
+        <div class="srs">
+          <span>1日</span><b>→</b><span>3日</span><b>→</b><span>7日</span><b>→</b><span>14日</span><b>→</b><span>30日</span>
+        </div>
+        <p class="note">ヒントを使ったり間違えたりすると、最初に戻って翌日また出題されます。</p>
+      </div>
+    </div>
+
+    <div class="fade window">
+      <div class="window-bar">dayone — トップページ</div>
+<pre class="screenshot">╭─ コマンド一覧 ──────────────────────────────────────────────────╮
+│   <span class="c-purple">場所と移動</span>  <span class="c-green">■■</span>□  2/3          <span class="c-purple">中身を見る</span>  □□□□  0/4       │
+│     1 <span class="c-green">✓</span> <span class="c-blue">◆</span> <span class="c-cyan">pwd</span>   いまいる場所を表示  4   <span class="c-blue">◆</span> <span class="c-cyan">cat</span>   中身を表示    │
+│     2 <span class="c-red">!</span> <span class="c-blue">◆</span> <span class="c-cyan">ls</span>    一覧を表示          5   <span class="c-blue">◆</span> <span class="c-cyan">head</span>  先頭だけ表示  │
+│     3   <span class="c-blue">◆</span> <span class="c-cyan">cd</span>    別の場所へ移動      6   <span class="c-blue">◆</span> <span class="c-cyan">tail</span>  末尾だけ表示  │
+╰─────────────────────────────────────────────────────────────────╯
+  おぼえたコマンド   5%  <span class="c-green">━</span><span class="c-dim">━━━━━━━━━━━━━━━━━━━</span>  2/38   <span class="c-red">今日の復習 1 個</span>
+<span class="c-blue">◆</span> oncall への準備    6%  <span class="c-green">━</span><span class="c-dim">━━━━━━━━━━━━━━━━━━━</span>  2/29
+
+  <span class="c-green">✓</span> おぼえた  <span class="c-red">!</span> 復習どき  <span class="c-blue">◆</span> oncall で使う</pre>
+    </div>
+
+    <h3 class="fade sub-h"># 収録コマンド(38 個)</h3>
+    <div class="fade cmd-table">
+      <div class="row"><span class="cat">場所と移動</span><span class="cmds"><code class="on">pwd</code><code class="on">ls</code><code class="on">cd</code></span></div>
+      <div class="row"><span class="cat">中身を見る</span><span class="cmds"><code class="on">cat</code><code class="on">head</code><code class="on">tail</code><code>less</code></span></div>
+      <div class="row"><span class="cat">作る・動かす・消す</span><span class="cmds"><code>mkdir</code><code>touch</code><code>cp</code><code class="on">mv</code><code>rm</code></span></div>
+      <div class="row"><span class="cat">出力とつなぎ方</span><span class="cmds"><code class="on">echo</code><code class="on">&gt;</code><code class="on">|</code></span></div>
+      <div class="row"><span class="cat">絞り込む・数える</span><span class="cmds"><code class="on">grep</code><code class="on">sort</code><code class="on">uniq</code><code class="on">awk</code><code class="on">wc</code><code class="on">cut</code></span></div>
+      <div class="row"><span class="cat">ファイルを探す・守る</span><span class="cmds"><code class="on">find</code><code class="on">du</code><code class="on">chmod</code><code class="on">xargs</code></span></div>
+      <div class="row"><span class="cat">書き換える・比べる</span><span class="cmds"><code class="on">sed</code><code class="on">diff</code><code class="on">comm</code><code class="on">join</code></span></div>
+      <div class="row"><span class="cat">プロセスを調べる・止める</span><span class="cmds"><code class="on">ps</code><code class="on">kill</code></span></div>
+      <div class="row"><span class="cat">スクリプトを書く準備</span><span class="cmds"><code class="on">test</code><code class="on">bash</code></span></div>
+      <div class="row"><span class="cat">調べる</span><span class="cmds"><code>--help</code><code>man</code><code>which</code></span></div>
+      <div class="row"><span class="cat">ファイルを編集する</span><span class="cmds"><code class="on">vim</code><code>vim-edit</code></span></div>
+      <p class="legend"><code class="on">◆</code> 付きの 29 個は oncall で使うコマンド。覚えるたびに「oncall への準備」のバーが進みます。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ONCALL ================= -->
+<section class="screen" id="oncall">
+  <div class="seq">
+    <h2 data-type><span class="ps1">$</span> oncall --about</h2>
+    <p data-type class="out page">[PAGER] 02:47 <span class="hl-red">CRITICAL</span> prod-api-01: HTTP 500 rate &gt; 30%</p>
+    <p data-type class="out lead"><span class="hl-red">oncall</span> — 障害対応をこなしながら Linux コマンドを身につけるターミナルゲーム。</p>
+    <p data-type class="out">あなたは新人 SRE。深夜にページャーが鳴り、壊れたサーバーに入って、本物のコマンドで原因を突き止めます。</p>
+
+    <div class="fade window">
+      <div class="window-bar">oncall — ミッション中</div>
+<pre class="screenshot"><span class="c-dim">(依頼の文章、打ったコマンドとその結果がここに流れます)</span>
+
+<span class="c-dim">──── </span><span class="c-cyan">mission</span> 依頼 │ <span class="c-cyan">hint</span> ヒント │ <span class="c-cyan">check</span> 判定 │ <span class="c-cyan">zukan</span> 図鑑 │ <span class="c-cyan">title</span> 戻る <span class="c-dim">─</span>
+<span class="c-green">●</span> you@prod-api-01:~/incident $ awk '$9 == 500' access.log | <span class="caret">▌</span>
+<span class="c-dim">──────────────────────────────────────────────────────────────────</span>
+ <span class="c-red">●</span> INCIDENT 深夜の 500 祭り  目安 7 分 / 12 コマンド
+   mission で依頼をもう一度表示、check で解決したか判定します。
+   <span class="c-yellow">→ ~/incident/answer.txt がまだありません。</span></pre>
+    </div>
+
+    <h3 class="fade sub-h"># インシデント</h3>
+    <div class="fade incidents">
+      <div class="inc"><span class="no">1</span><div><b>深夜の 500 祭り</b><p>アクセスログから 500 エラーの多い送信元を特定する</p><span class="cmds"><code>grep</code><code>awk</code><code>sort</code><code>uniq</code><code>head</code></span></div></div>
+      <div class="inc"><span class="no">2</span><div><b>満杯のディスクと開いた鍵</b><p>古くて大きいファイルを消し、秘密鍵の権限を直す</p><span class="cmds"><code>find</code><code>du</code><code>chmod</code></span></div></div>
+      <div class="inc"><span class="no">3</span><div><b>置換ひとつで直るはずだった</b><p>複数の設定ファイルをまとめて修正する</p><span class="cmds"><code>sed</code><code>diff</code></span></div></div>
+      <div class="inc"><span class="no">4</span><div><b>壊れたファイルを隔離せよ</b><p>中身で絞り込んだファイルをまとめて移動する</p><span class="cmds"><code>xargs</code><code>mv</code></span></div></div>
+      <div class="inc"><span class="no">5</span><div><b>止まらないワーカー</b><p>暴走しているプロセスを特定して止める</p><span class="cmds"><code>ps</code><code>kill</code><code>tail</code></span></div></div>
+      <div class="inc"><span class="no">6</span><div><b>消えた注文</b><p>書式の違う 2 つのログを突き合わせる</p><span class="cmds"><code>cut</code><code>comm</code><code>join</code></span></div></div>
+      <div class="inc"><span class="no">7</span><div><b>同じ夜を繰り返さない</b><p>エラーの急増を検知するシェルスクリプトを書く</p><span class="cmds"><code>wc</code><code>test</code></span></div></div>
+    </div>
+
+    <div class="fade cols">
+      <div class="card">
+        <h3># ランクと振り返り</h3>
+        <p>所要時間・コマンド数・ヒント数・判定ミスから、ランクが付きます。</p>
+        <p class="ranks"><span class="r-s">S</span><span class="r-a">A</span><span class="r-b">B</span><span class="r-c">C</span></p>
+        <p>クリア後は模範解答と別解の解説が出て、そのままシェルで別解を試せます。ログは毎回ランダムに生成されるので、何度でも挑めます。</p>
+      </div>
+      <div class="card">
+        <h3># コマンド図鑑</h3>
+        <p>解決したインシデントで扱ったコマンドが <span class="hl-cyan">zukan</span> に登録されます。書式・よく使うオプション・使用例と、自分がそのコマンドを使った回数を確認できます。</p>
+        <p class="note">トップページでも、ミッション中でも <code>zukan</code> で開けます。</p>
+      </div>
+    </div>
+
+    <h3 class="fade sub-h"># 見学 — 先輩の作業を横で見る</h3>
+    <div class="fade window">
+      <div class="window-bar">oncall — senpai</div>
+<pre class="screenshot"><span class="c-green">●</span> senpai@mail-relay-01:~/mail $ grep status=bounced mail.log | cut -d' ' -f4 | cut -d@ -f2 | head -3
+example.net
+example.net
+shop.example.jp
+<span class="c-dim">─ 見学 ──────────────────────────────── Enter 次へ │ title トップページに戻る ─</span>
+ <span class="c-purple">▶ 見学「数える」 6/7</span>  届かないメールは、どこ宛てか
+   <span class="c-yellow">1 つ目の cut で to=名前@ドメイン を取り出し、2 つ目の cut -d@ -f2 で @ の後ろだけにしました。</span></pre>
+    </div>
+    <p class="fade out">トップページで <code>senpai</code> と打つと見学の部屋へ。Enter を押すたびに先輩が次のコマンドを打ち、<span class="hl-yellow">「なぜそれをするのか」「何が分かったか」</span>を説明してくれます。主役は答えではなく、<b>コマンドの組み立て方</b>です。</p>
+    <div class="fade tours">
+      <div><b>数える</b><span>届かないメールは、どこ宛てか</span></div>
+      <div><b>探す</b><span>昨夜のバックアップは、取れているか</span></div>
+      <div><b>比べる</b><span>辞めた人のアカウントは、残っていないか</span></div>
+      <div><b>書き換える</b><span>調査用の設定を、安全に元へ戻す</span></div>
+      <div><b>止める</b><span>間違えて動かした集計を、1 つだけ止める</span></div>
+      <div><b>まとめる</b><span>毎朝の確認を、スクリプトにする</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMMON ================= -->
+<section class="screen" id="common">
+  <div class="seq">
+    <h2 data-type><span class="ps1">$</span> cat FEATURES</h2>
+    <div class="fade grid3">
+      <div class="card">
+        <h3># 本物の bash</h3>
+        <p>打ったコマンドは、本物の bash で実行されます。覚えたことが、そのまま実際のサーバーで通用します。</p>
+      </div>
+      <div class="card">
+        <h3># 壊しても大丈夫</h3>
+        <p><code>unshare</code> で名前空間を分けた隔離環境で動きます。本来のホームや Windows のドライブは見えず、作業用ファイルは使い捨てです。</p>
+      </div>
+      <div class="card">
+        <h3># レトロなデザイン</h3>
+        <p>Windows Terminal なら <code>--retro</code> で、緑一色のブラウン管風の画面でも遊べます。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= START ================= -->
+<section class="screen" id="start">
+  <div class="seq">
+    <h2 data-type><span class="ps1">$</span> ./install.sh</h2>
+    <p data-type class="out">Ubuntu(Windows の WSL2 上の Ubuntu を含む)で動きます。各リポジトリのディレクトリで、最初に 1 回だけ実行します。</p>
+    <div class="fade cols">
+      <div class="card">
+        <h3 class="hl-cyan"># day-one</h3>
+<pre class="code">python3 -m venv .venv
+.venv/bin/pip install -e '.[dev]'
+ln -sf "$PWD/.venv/bin/dayone" ~/.local/bin/dayone
+
+<span class="c-green">dayone</span></pre>
+        <a class="link" href="https://github.com/kasumiyanagita/day-one">github.com/kasumiyanagita/day-one →</a>
+      </div>
+      <div class="card">
+        <h3 class="hl-red"># oncall</h3>
+<pre class="code">python3 -m venv .venv
+.venv/bin/pip install -e '.[dev]'
+ln -sf "$PWD/.venv/bin/oncall" ~/.local/bin/oncall
+
+<span class="c-green">oncall</span></pre>
+        <a class="link" href="https://github.com/kasumiyanagita/oncall">github.com/kasumiyanagita/oncall →</a>
+      </div>
+    </div>
+    <p data-type class="cmdline end"><span class="ps1">you@terminal:~$</span> dayone</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span class="ps1">you@terminal:~$</span> exit <span class="c-dim"># exit はトップページで使えます。</span>
+</footer>
+
+<button class="skip" type="button" aria-label="アニメーションを飛ばす">skip ▸▸</button>
+
+<script src="main.js"></script>
+</body>
+</html>
