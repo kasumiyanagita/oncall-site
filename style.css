@@ -387,3 +387,65 @@ footer {
   .tui-meters > span:nth-child(6n) { grid-column: 2 / -1; }
   .tui-meters > span:nth-child(6n):empty { display: none; }
 }
+
+/* ---------- お試し版 ---------- */
+.demo { margin-top: 24px; }
+.demo-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.demo-tab {
+  font-family: var(--mono); font-size: 14px;
+  color: var(--dim); background: var(--bg-2);
+  border: 1px solid var(--line); border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  padding: 8px 14px; cursor: pointer;
+}
+.demo-tab span { font-family: var(--jp); font-size: 12px; margin-left: .4em; }
+.demo-tab[data-app="dayone"][aria-selected="true"] { color: var(--cyan); border-color: var(--cyan); }
+.demo-tab[data-app="oncall"][aria-selected="true"] { color: var(--red); border-color: var(--red); }
+.demo-term { margin-top: 0; border-top-left-radius: 0; }
+.demo-body { cursor: text; }
+.demo-screen {
+  height: 420px;
+  overflow-y: auto;
+  padding-bottom: 8px;
+  overscroll-behavior: contain;
+}
+.demo-line { white-space: pre-wrap; word-break: break-all; }
+.demo-line.indent, .demo-status .indent { padding-left: 2em; }
+.demo-out { color: #d8e4dd; }
+.demo-title { margin-top: 4px; }
+.demo-after { margin: 2px 0 8px; }
+.demo-ticket { border-left: 2px solid var(--line); padding: 6px 0 6px 14px; margin: 8px 0 12px; white-space: normal; }
+.demo-inputline { display: flex; align-items: center; gap: .5em; padding: 2px 0; }
+.demo-prompt { white-space: nowrap; flex: none; }
+.demo-input {
+  flex: 1; min-width: 0;
+  font: inherit; color: var(--fg);
+  background: transparent; border: 0; outline: none;
+  caret-color: var(--green);
+  padding: 0;
+}
+.demo-status { min-height: 5.1em; padding-top: 2px; white-space: normal; }
+.demo-status code, .demo-screen code { font-size: .95em; }
+.demo-clear { white-space: normal; border: 1px solid var(--green); border-radius: 6px; padding: 12px 14px; margin: 10px 0; }
+.demo-rank { margin: 6px 0 10px; }
+.demo-rank span { font-weight: 700; font-size: 20px; border: 1px solid; border-radius: 4px; padding: 0 10px; margin-right: 8px; }
+.demo-steps { margin: 6px 0 10px; padding-left: 1.6em; }
+.demo-cta {
+  white-space: normal;
+  border: 1px dashed var(--yellow);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin: 12px 0 4px;
+}
+.demo-cta-head { color: var(--yellow); font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+.demo-cta p { margin: 0 0 8px; }
+.demo-cta-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.demo-cta .btn { font-size: 13px; padding: 7px 14px; cursor: pointer; }
+.demo .note { margin-top: 8px; }
+
+@media (max-width: 760px) {
+  .demo-screen { height: 360px; }
+  .demo-tab { font-size: 13px; padding: 7px 10px; }
+  .demo-tab span { display: none; }
+  .demo-input { font-size: 16px; } /* iOS で入力時に拡大されないように */
+}

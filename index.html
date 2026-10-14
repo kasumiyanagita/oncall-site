@@ -20,6 +20,7 @@
     <a href="#flow">flow</a>
     <a href="#day-one">day-one</a>
     <a href="#oncall">oncall</a>
+    <a href="#try">try</a>
     <a href="#start">start</a>
   </span>
 </nav>
@@ -41,7 +42,8 @@
       <span class="hl-cyan">day-one</span> で 1 つずつ基礎を固め、<span class="hl-red">oncall</span> で障害対応に挑みます。
     </p>
     <p class="fade hero-actions">
-      <a class="btn" href="#flow">./learn-flow.sh</a>
+      <a class="btn" href="#try">./try.sh</a>
+      <a class="btn ghost" href="#flow">./learn-flow.sh</a>
       <a class="btn ghost" href="#start">./install.sh</a>
     </p>
   </div>
@@ -247,6 +249,33 @@
   </div>
 </section>
 
+<!-- ================= TRY ================= -->
+<section class="screen" id="try">
+  <div class="seq">
+    <h2 data-type><span class="ps1">$</span> ./try.sh</h2>
+    <p data-type class="out lead">ブラウザの中で、1 つずつ体験できます。</p>
+    <p data-type class="out">day-one は <span class="hl-cyan">grep</span> の 1 コマンド、oncall は インシデント 1「深夜の 500 祭り」。下の画面をクリックして、そのまま打ってください。</p>
+
+    <div class="fade demo" id="demo">
+      <div class="demo-tabs" role="tablist">
+        <button type="button" class="demo-tab" data-app="dayone" role="tab">day-one <span>grep を覚える</span></button>
+        <button type="button" class="demo-tab" data-app="oncall" role="tab">oncall <span>深夜の 500 祭り</span></button>
+      </div>
+      <div class="window demo-term">
+        <div class="window-bar">お試し版 — 本物は bash で動きます。ここでは、よく使うコマンドとパイプ(|)、&gt; だけが使えます</div>
+        <div class="tui demo-body">
+          <div class="demo-screen" aria-live="polite"></div>
+          <div class="tui-rule demo-ops"></div>
+          <label class="demo-inputline"><span class="demo-prompt"></span><input class="demo-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="コマンドを入力"></label>
+          <div class="tui-rule"><i></i></div>
+          <div class="demo-status"></div>
+        </div>
+      </div>
+      <p class="note">↑↓ で履歴、Tab でファイル名の補完ができます。データは開くたびにランダムに作られ、どこにも送られません。</p>
+    </div>
+  </div>
+</section>
+
 <!-- ================= COMMON ================= -->
 <section class="screen" id="common">
   <div class="seq">
@@ -272,6 +301,7 @@
 <section class="screen" id="start">
   <div class="seq">
     <h2 data-type><span class="ps1">$</span> ./install.sh</h2>
+    <p data-type class="out lead">続きは、ダウンロードしてから。</p>
     <p data-type class="out">Ubuntu(Windows の WSL2 上の Ubuntu を含む)で動きます。各リポジトリのディレクトリで、最初に 1 回だけ実行します。</p>
     <div class="fade cols">
       <div class="card">
@@ -306,5 +336,6 @@ ln -sf "$PWD/.venv/bin/oncall" ~/.local/bin/oncall
 <button class="skip" type="button" aria-label="アニメーションを飛ばす">skip ▸▸</button>
 
 <script src="main.js"></script>
+<script src="demo.js"></script>
 </body>
 </html>
