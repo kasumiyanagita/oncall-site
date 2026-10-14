@@ -128,16 +128,33 @@
 
     <div class="fade window">
       <div class="window-bar">dayone — トップページ</div>
-<pre class="screenshot">╭─ コマンド一覧 ──────────────────────────────────────────────────╮
-│   <span class="c-purple">場所と移動</span>  <span class="c-green">■■</span>□  2/3          <span class="c-purple">中身を見る</span>  □□□□  0/4       │
-│     1 <span class="c-green">✓</span> <span class="c-blue">◆</span> <span class="c-cyan">pwd</span>   いまいる場所を表示  4   <span class="c-blue">◆</span> <span class="c-cyan">cat</span>   中身を表示    │
-│     2 <span class="c-red">!</span> <span class="c-blue">◆</span> <span class="c-cyan">ls</span>    一覧を表示          5   <span class="c-blue">◆</span> <span class="c-cyan">head</span>  先頭だけ表示  │
-│     3   <span class="c-blue">◆</span> <span class="c-cyan">cd</span>    別の場所へ移動      6   <span class="c-blue">◆</span> <span class="c-cyan">tail</span>  末尾だけ表示  │
-╰─────────────────────────────────────────────────────────────────╯
-  おぼえたコマンド   5%  <span class="c-green">━</span><span class="c-dim">━━━━━━━━━━━━━━━━━━━</span>  2/38   <span class="c-red">今日の復習 1 個</span>
-<span class="c-blue">◆</span> oncall への準備    6%  <span class="c-green">━</span><span class="c-dim">━━━━━━━━━━━━━━━━━━━</span>  2/29
-
-  <span class="c-green">✓</span> おぼえた  <span class="c-red">!</span> 復習どき  <span class="c-blue">◆</span> oncall で使う</pre>
+<div class="tui">
+  <div class="tui-box">
+    <span class="tui-legend">コマンド一覧</span>
+    <div class="tui-groups">
+      <div class="tui-group">
+        <div class="tui-cat"><span class="c-purple">場所と移動</span> <span class="blocks"><i class="on"></i><i class="on"></i><i></i></span> 2/3</div>
+        <div class="tui-cmd"><span>1</span><span class="c-green">✓</span><span class="c-blue">◆</span><span class="c-cyan">pwd</span><span>いまいる場所を表示</span></div>
+        <div class="tui-cmd"><span>2</span><span class="c-red">!</span><span class="c-blue">◆</span><span class="c-cyan">ls</span><span>一覧を表示</span></div>
+        <div class="tui-cmd"><span>3</span><span></span><span class="c-blue">◆</span><span class="c-cyan">cd</span><span>別の場所へ移動</span></div>
+      </div>
+      <div class="tui-group">
+        <div class="tui-cat"><span class="c-purple">中身を見る</span> <span class="blocks"><i></i><i></i><i></i><i></i></span> 0/4</div>
+        <div class="tui-cmd"><span>4</span><span></span><span class="c-blue">◆</span><span class="c-cyan">cat</span><span>中身を表示</span></div>
+        <div class="tui-cmd"><span>5</span><span></span><span class="c-blue">◆</span><span class="c-cyan">head</span><span>先頭だけ表示</span></div>
+        <div class="tui-cmd"><span>6</span><span></span><span class="c-blue">◆</span><span class="c-cyan">tail</span><span>末尾だけ表示</span></div>
+      </div>
+    </div>
+    <div class="tui-page c-dim">ページ 1/4 ・ ← → で移動</div>
+  </div>
+  <div class="tui-meters">
+    <span></span><span>おぼえたコマンド</span><span>5%</span><span class="tui-bar"><i style="width:5%"></i></span><span>2/38</span><span class="c-red">今日の復習 1 個</span>
+    <span class="c-blue">◆</span><span>oncall への準備</span><span>6%</span><span class="tui-bar"><i style="width:6%"></i></span><span>2/29</span><span></span>
+  </div>
+  <div class="tui-legend-line"><span class="c-green">✓</span> おぼえた　<span class="c-red">!</span> 復習どき　<span class="c-blue">◆</span> oncall で使う</div>
+  <div class="tui-rule"><span><span class="c-cyan">Enter</span> 復習 ls │ <span class="c-cyan">← →</span> ページ │ <span class="c-cyan">tutorial</span> 使い方 │ <span class="c-cyan">exit</span> 終了</span><i></i></div>
+  <div class="tui-line"><span class="c-green">&gt;</span> <span class="c-dim">Enter / コマンドを入力(例: cd)</span></div>
+</div>
     </div>
 
     <h3 class="fade sub-h"># 収録コマンド(38 個)</h3>
@@ -168,14 +185,16 @@
 
     <div class="fade window">
       <div class="window-bar">oncall — ミッション中</div>
-<pre class="screenshot"><span class="c-dim">(依頼の文章、打ったコマンドとその結果がここに流れます)</span>
-
-<span class="c-dim">──── </span><span class="c-cyan">mission</span> 依頼 │ <span class="c-cyan">hint</span> ヒント │ <span class="c-cyan">check</span> 判定 │ <span class="c-cyan">zukan</span> 図鑑 │ <span class="c-cyan">title</span> 戻る <span class="c-dim">─</span>
-<span class="c-green">●</span> you@prod-api-01:~/incident $ awk '$9 == 500' access.log | <span class="caret">▌</span>
-<span class="c-dim">──────────────────────────────────────────────────────────────────</span>
- <span class="c-red">●</span> INCIDENT 深夜の 500 祭り  目安 7 分 / 12 コマンド
-   mission で依頼をもう一度表示、check で解決したか判定します。
-   <span class="c-yellow">→ ~/incident/answer.txt がまだありません。</span></pre>
+<div class="tui">
+  <div class="tui-line c-dim">(依頼の文章、打ったコマンドとその結果がここに流れます)</div>
+  <div class="tui-line">&nbsp;</div>
+  <div class="tui-rule right"><i></i><span><span class="c-cyan">mission</span> 依頼 │ <span class="c-cyan">hint</span> ヒント │ <span class="c-cyan">check</span> 判定 │ <span class="c-cyan">zukan</span> 図鑑 │ <span class="c-cyan">title</span> 戻る</span></div>
+  <div class="tui-line nowrap"><span class="c-green">●</span> you@prod-api-01:~/incident $ awk '$9 == 500' access.log | <span class="caret">▌</span></div>
+  <div class="tui-rule"><i></i></div>
+  <div class="tui-line"><span class="c-red">●</span> INCIDENT 深夜の 500 祭り　<span class="c-dim">目安 7 分 / 12 コマンド</span></div>
+  <div class="tui-line indent">mission で依頼をもう一度表示、check で解決したか判定します。</div>
+  <div class="tui-line indent c-yellow">→ ~/incident/answer.txt がまだありません。</div>
+</div>
     </div>
 
     <h3 class="fade sub-h"># インシデント</h3>
@@ -206,13 +225,15 @@
     <h3 class="fade sub-h"># 見学 — 先輩の作業を横で見る</h3>
     <div class="fade window">
       <div class="window-bar">oncall — senpai</div>
-<pre class="screenshot"><span class="c-green">●</span> senpai@mail-relay-01:~/mail $ grep status=bounced mail.log | cut -d' ' -f4 | cut -d@ -f2 | head -3
-example.net
-example.net
-shop.example.jp
-<span class="c-dim">─ 見学 ──────────────────────────────── Enter 次へ │ title トップページに戻る ─</span>
- <span class="c-purple">▶ 見学「数える」 6/7</span>  届かないメールは、どこ宛てか
-   <span class="c-yellow">1 つ目の cut で to=名前@ドメイン を取り出し、2 つ目の cut -d@ -f2 で @ の後ろだけにしました。</span></pre>
+<div class="tui">
+  <div class="tui-line nowrap"><span class="c-green">●</span> senpai@mail-relay-01:~/mail $ grep status=bounced mail.log | cut -d' ' -f4 | cut -d@ -f2 | head -3</div>
+  <div class="tui-line">example.net</div>
+  <div class="tui-line">example.net</div>
+  <div class="tui-line">shop.example.jp</div>
+  <div class="tui-rule"><span class="c-dim">見学</span><i></i><span><span class="c-cyan">Enter</span> 次へ │ <span class="c-cyan">title</span> トップページに戻る</span></div>
+  <div class="tui-line"><span class="c-purple">▶ 見学「数える」 6/7</span>　届かないメールは、どこ宛てか</div>
+  <div class="tui-line indent c-yellow">1 つ目の cut で to=名前@ドメイン を取り出し、2 つ目の cut -d@ -f2 で @ の後ろだけにしました。</div>
+</div>
     </div>
     <p class="fade out">トップページで <code>senpai</code> と打つと見学の部屋へ。Enter を押すたびに先輩が次のコマンドを打ち、<span class="hl-yellow">「なぜそれをするのか」「何が分かったか」</span>を説明してくれます。主役は答えではなく、<b>コマンドの組み立て方</b>です。</p>
     <div class="fade tours">
