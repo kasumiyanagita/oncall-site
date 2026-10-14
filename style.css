@@ -78,6 +78,33 @@ b, strong { color: #e8f2ec; }
 .topbar-links a { color: var(--fg); text-decoration: none; }
 .topbar-links a::before { content: "./"; color: var(--dim); }
 .topbar-links a:hover { color: var(--green); }
+.nav-app { position: relative; }
+.nav-app-btn {
+  font: inherit; color: var(--fg);
+  background: none; border: 0; padding: 0; cursor: pointer;
+}
+.nav-app-btn::before { content: "./"; color: var(--dim); }
+.nav-app-btn::after { content: " ▾"; color: var(--dim); font-size: .85em; }
+.nav-app-btn:hover, .nav-app.open .nav-app-btn { color: var(--green); }
+.nav-menu {
+  display: none;
+  position: absolute; top: calc(100% + 10px); left: -12px;
+  flex-direction: column; gap: 2px;
+  min-width: 150px;
+  padding: 6px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+/* ボタンとメニューの間のすき間でも閉じないように */
+.nav-menu::before { content: ""; position: absolute; left: 0; right: 0; top: -12px; height: 12px; }
+.nav-app.open .nav-menu { display: flex; }
+@media (hover: hover) { .nav-app:hover .nav-menu { display: flex; } }
+.nav-menu a { padding: 4px 10px; border-radius: 4px; }
+.nav-menu a:hover { background: #0b0f0c; }
+.nav-menu a[href="#day-one"]:hover { color: var(--cyan); }
+.nav-menu a[href="#oncall"]:hover { color: var(--red); }
 
 /* ---------- layout ---------- */
 main { max-width: 980px; margin: 0 auto; padding: 0 20px; }
@@ -565,3 +592,24 @@ footer {
 .win-tab:hover { color: var(--green); }
 .retro-block { margin-top: 40px; }
 .retro-howto { margin-top: 14px; }
+
+/* お試し版の中の枠(カードの説明、依頼、ヒント、結果) */
+.demo-card, .demo-panel {
+  position: relative;
+  white-space: normal;
+  border: 1px solid var(--dim);
+  border-radius: 6px;
+  padding: 14px 14px 10px;
+  margin: 14px 0 10px;
+}
+.demo-card-title, .demo-panel-title {
+  position: absolute; top: -.8em; left: 10px;
+  padding: 0 .5em;
+  background: #070a08;
+}
+.demo-panel-foot { position: absolute; bottom: -.8em; left: 50%; transform: translateX(-50%); padding: 0 .5em; background: #070a08; white-space: nowrap; }
+.demo-card-row { display: grid; grid-template-columns: 6.5em 1fr; gap: 0 1em; margin: 6px 0; }
+.demo-stats { display: grid; grid-template-columns: max-content max-content 1fr; gap: 0 2em; }
+.demo-result b[class^="r-"] { font-size: 1.2em; }
+.demo-rule { display: flex; align-items: center; gap: .6em; margin: 14px 0 6px; }
+.demo-rule::before, .demo-rule::after { content: ""; flex: 1; border-top: 1px solid var(--dim); }

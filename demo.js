@@ -706,49 +706,31 @@
     }
   }
 
-  // ================= day-one のお試し: grep =================
-  const DAYONE_FILES = {
-    "app.log": `09:01 INFO  起動しました
-09:02 INFO  設定を読み込みました
-09:05 ERROR データベースに接続できません
-09:06 WARN  再接続を試みます
-09:07 INFO  接続しました
-09:12 ERROR 応答がありません
-09:13 WARN  処理が遅れています
-09:15 INFO  復旧しました
-09:20 ERROR ディスクの空きが足りません
-`,
-    "server.log": `10:00 connect from 10.0.0.5
-10:01 timeout waiting for 10.0.0.9
-10:02 connect from 10.0.0.7
-10:03 refused connection from 10.0.0.3
-10:04 access denied for user guest
-10:05 timeout waiting for 10.0.0.4
-10:06 connect from 10.0.0.8
-10:07 access denied for user admin
-10:08 refused connection from 10.0.0.6
-10:09 timeout waiting for 10.0.0.2
-10:10 access denied for user test
-10:11 connect from 10.0.0.1
-`,
+  // ================= day-one のお試し: 最初のコマンド pwd =================
+  // 文章は day-one の cards/01_pwd.toml と同じ。流れと指摘の文言は lesson.py に合わせてある。
+  const PWD_CARD = {
+    command: "pwd",
+    title: "いまいる場所を表示する",
+    summary: "いま作業しているディレクトリ(フォルダ)を、いちばん上の階層からの道順で表示します。",
+    when: "移動を繰り返して、自分がどこにいるか分からなくなったとき。ファイルを作ったり消したりする前に、場所を確かめたいとき。",
+    syntax: "pwd",
+    dirs: ["documents/reports", "documents/letters", "projects/website", "projects/notes", "pictures/trip", "music"],
+    places: ["documents/reports", "documents/letters", "projects/website", "projects/notes", "pictures/trip"],
+    steps: [
+      {
+        say: "ターミナルでは、いつも「どこかのディレクトリの中」にいます。`pwd` と打って Enter を押し、いまいる場所を確かめましょう。",
+        run: "pwd",
+        after: "`/` で区切られた道順(パス)が表示されました。ここは、あなた専用の作業場所である「ホームディレクトリ」です。",
+      },
+    ],
+    challenge: {
+      ask: "いま、あなたを別のディレクトリへこっそり移動させました。どこにいるのか、表示して確かめてください。",
+      solution: "pwd",
+      hints: ["ここで覚えたコマンドを、そのまま打つだけです。", "`pwd` と打って Enter を押します。"],
+      done: "`pwd` は print working directory(作業中のディレクトリを表示)の略です。迷ったらまず `pwd`、と覚えておくと安心です。",
+    },
   };
-  const DAYONE_TRY = [
-    {
-      say: "`app.log` には、起動や接続の記録が 9 行あります。`grep ERROR app.log` と打って、`ERROR` を含む行だけを取り出してみましょう。",
-      run: "grep ERROR app.log",
-      after: "`ERROR` を含む 3 行だけが表示されました。見つかった言葉には色が付きます。",
-    },
-    {
-      say: "行そのものではなく、何行あるかだけを知りたいときは `-c` を付けます。`grep -c ERROR app.log` と打ってみましょう。",
-      run: "grep -c ERROR app.log",
-      after: "`3` と表示されました。`-c` は count(数える)の頭文字です。",
-    },
-    {
-      say: "逆に「その言葉を含まない行」を取り出すには `-v` を付けます。`grep -v INFO app.log` と打って、`INFO` 以外の行を見てみましょう。",
-      run: "grep -v INFO app.log",
-      after: "`INFO` の行が消えて、`ERROR` と `WARN` の行だけが残りました。いらない行を取り除くのに使えます。",
-    },
-  ];
+  const SUGGEST_HINT_AFTER = 3;
 
   class DayOne {
     constructor(term) {
@@ -758,64 +740,90 @@
     }
 
     start() {
+      const card = (this.card = PWD_CARD);
       const rng = makeRng(Date.now());
-      this.word = rng.pick(["timeout", "refused", "denied"]);
+      this.place = rng.pick(card.places);
       const fs = new FS("/home/you");
-      for (const [name, content] of Object.entries(DAYONE_FILES)) fs.write(`/home/you/${name}`, content);
+      for (const d of card.dirs) {
+        let p = "/home/you";
+        for (const part of d.split("/")) fs.addDir((p += "/" + part));
+      }
       this.shell = new Shell(fs, "/home/you");
-      this.step = 0; // 0..2 = 打ってみよう, 3 = お題, 4 = 正解
+      this.step = 0; // steps.length 未満 = 打ってみよう、steps.length = お題、それより大きい = 正解
       this.hints = 0;
-      this.feedback = "";
+      this.misses = 0;
+      this.feedback = null; // [文, muted か]
       this.term.clear();
-      this.term.ops.innerHTML = `<span class="lbl c-cyan">grep</span><i></i><span><span class="c-cyan">hint</span> ヒント │ <span class="c-cyan">card</span> 説明 │ <span class="c-cyan">title</span> 最初から</span>`;
+      this.term.ops.innerHTML = `<span class="lbl c-cyan">${card.command}</span><i></i><span><span class="c-cyan">hint</span> ヒント │ <span class="c-cyan">card</span> 説明 │ <span class="c-cyan">title</span> 最初から</span>`;
       this.term.setPrompt();
       this.showCard();
       this.render();
     }
 
+    get inChallenge() {
+      return this.step === this.card.steps.length;
+    }
+
+    get done() {
+      return this.step > this.card.steps.length;
+    }
+
+    // このカードは「場所を自分で調べる」ので、プロンプトに現在地を出さない(prompt = "plain")
     promptHtml() {
-      return `<span class="c-green">${esc(this.shell.prettyCwd())} $</span>`;
+      return `<span class="c-green">$</span>`;
     }
 
     showCard() {
-      const t = this.term;
-      t.html(`<span class="c-purple">◆ grep</span>  言葉を含む行だけを取り出す`, "demo-title");
-      t.html(md("ファイルの中から、指定した言葉を含む行だけを表示します。"));
-      t.html(`<span class="c-purple">いつ使う</span>  ` + md("長いログの中から、エラーの行だけを見たいとき。ある言葉がファイルのどこに出てくるかを探したいとき。"));
-      t.html(`<span class="c-purple">書き方</span>    <code>grep [オプション] 言葉 ファイル</code>`);
-      t.html("&nbsp;");
+      const c = this.card;
+      this.term.html(
+        `<div class="demo-card">` +
+          `<div class="demo-card-title"><span class="c-cyan">${c.command}</span> ─ <b>${esc(c.title)}</b></div>` +
+          `<div class="demo-card-row"><span class="c-dim">説明</span><span>${md(c.summary)}</span></div>` +
+          `<div class="demo-card-row"><span class="c-dim">いつ使う</span><span>${md(c.when)}</span></div>` +
+          `<div class="demo-card-row"><span class="c-dim">syntax</span><span class="c-cyan">${esc(c.syntax)}</span></div>` +
+          `</div>`
+      );
     }
 
-    marks() {
-      const dots = [0, 1, 2].map((i) => (i < this.step ? '<span class="c-green">●</span>' : "○")).join("");
-      const star = this.step >= 4 ? '<span class="c-yellow">★</span>' : "☆";
-      return dots + star;
+    track() {
+      const total = this.card.steps.length;
+      if (this.inChallenge || this.done) return `<span class="c-green">${"●".repeat(total)}</span><b>★</b>`;
+      const upcoming = "○".repeat(total - this.step - 1) + "☆";
+      return `<span class="c-green">${"●".repeat(this.step)}</span><b>●</b><span class="c-dim">${upcoming}</span>`;
     }
 
     render() {
       const t = this.term;
+      if (this.done) {
+        t.setStatus(
+          `<div><span class="c-purple">▶ 次へ</span></div>` +
+            `<div class="indent"><span class="c-cyan">Enter</span> で新しいコマンド <span class="c-cyan">ls</span> へ進む</div>` +
+            `<div class="indent"><span class="c-cyan">r</span> もう一度   <span class="c-cyan">title</span> 最初から</div>`
+        );
+        return;
+      }
       let head;
       let body;
-      let hint = "";
-      if (this.step < 3) {
-        const s = DAYONE_TRY[this.step];
-        head = `▶ 打ってみよう ${this.step + 1}/3`;
+      let hints = [];
+      if (!this.inChallenge) {
+        const s = this.card.steps[this.step];
+        head = `▶ 打ってみよう</span> <span class="c-dim">${this.step + 1}/${this.card.steps.length}</span>`;
         body = md(s.say);
-        if (this.hints) hint = `<span class="c-yellow">ヒント</span> ${md(`\`${s.run}\` と打ってみましょう。`)}`;
-      } else if (this.step === 3) {
-        head = "▶ お題";
-        body = md(`\`server.log\` から、\`${this.word}\` を含む行だけを表示してください。`);
-        const hs = ["`grep` のあとに、探したい言葉、ファイルの名前の順に書きます。", `\`grep ${this.word} server.log\` と打ちます。`];
-        hint = hs.slice(0, this.hints).map((h) => `<span class="c-yellow">ヒント</span> ${md(h)}`).join("<br>");
+        if (this.hints) hints = [`<span class="c-yellow">ヒント</span> ${md(`\`${s.run}\` と打ってみましょう。`)}`];
       } else {
-        head = '<span class="c-green">✓ 正解です</span>';
-        body = "grep を「おぼえた」になりました。翌日に、中身を変えたお題で復習が来ます。";
+        head = "▶ お題</span>";
+        body = md(this.card.challenge.ask);
+        const hs = this.card.challenge.hints;
+        hints = hs.slice(0, this.hints).map((h, i) => `<span class="c-yellow">ヒント ${i + 1}/${hs.length}</span> ${md(h)}`);
       }
+      const fb = this.feedback
+        ? `<div class="indent ${this.feedback[1] ? "c-dim" : "c-yellow"}">→ ${md(this.feedback[0])}</div>`
+        : "";
       t.setStatus(
-        `<div><span class="c-purple">${head}</span>  ${this.marks()}</div>` +
+        `<div><span class="c-purple">${head}  ${this.track()}</div>` +
           `<div class="indent">${body}</div>` +
-          (hint ? `<div class="indent">${hint}</div>` : "") +
-          (this.feedback ? `<div class="indent c-yellow">${this.feedback}</div>` : "")
+          hints.map((h) => `<div class="indent">${h}</div>`).join("") +
+          fb
       );
     }
 
@@ -823,10 +831,15 @@
       const t = this.term;
       const cmd = line.trim();
       t.echo(line);
-      this.feedback = "";
-      if (this.step >= 4 && (cmd === "" || cmd === "r")) {
-        if (cmd === "r") this.start();
-        return;
+      this.feedback = null;
+      if (this.done) {
+        if (cmd === "r" || cmd === "retry" || cmd === "title") return this.start();
+        if (cmd === "") {
+          t.html(ctaHtml("dayone"), "demo-cta-wrap");
+          return;
+        }
+        if (cmd === "exit") this.feedback = ["exit はトップページで使えます。", false];
+        return this.render();
       }
       if (!cmd) return this.render();
       if (cmd === "title") return this.start();
@@ -835,39 +848,56 @@
         return this.render();
       }
       if (cmd === "hint") {
-        const max = this.step < 3 ? 1 : this.step === 3 ? 2 : 0;
-        if (this.hints < max) this.hints++;
-        else this.feedback = max ? "ヒントはこれで全部です。" : "いまはヒントはありません。";
+        if (this.inChallenge) {
+          if (this.hints < this.card.challenge.hints.length) this.hints++;
+        } else this.hints = 1;
         return this.render();
       }
       if (cmd === "exit") {
-        this.feedback = "exit はトップページで使えます。お試し版をやめるときは、このまま下へスクロールしてください。";
+        this.feedback = ["exit はトップページで使えます。お試し版をやめるときは、このまま下へスクロールしてください。", false];
         return this.render();
       }
 
       const r = t.runShell(line);
-      if (this.step < 3) {
-        if (r && cmd.replace(/\s+/g, " ") === DAYONE_TRY[this.step].run) {
-          t.html(md(DAYONE_TRY[this.step].after), "c-green demo-after");
-          this.step++;
-          this.hints = 0;
-          if (this.step === 3) t.html(`<span class="c-purple">ここからお題です。</span> 自分で考えて打ってみましょう。`);
-        }
-      } else if (this.step === 3 && r) {
-        const expected = new Shell(this.shell.fs, "/home/you").run(`grep ${this.word} server.log`).out;
-        const usedGrep = r.stages.some((s) => s[0] === "grep");
-        if (!r.redirected && r.out === expected && usedGrep) {
-          this.step = 4;
-          t.html(md("`grep` は、探す言葉がどこにあっても一致します。たとえば `grep 500` は、時刻や大きさの中の「500」も拾ってしまいます。「何列目の値か」まで指定して絞り込みたいときは、あとで覚える `awk` を使います。"), "demo-after");
-          t.html(`<span class="c-blue">◆</span> grep は oncall の <b>インシデント 1「深夜の 500 祭り」</b>などで使います。`);
-          t.html(ctaHtml("dayone"), "demo-cta-wrap");
-        } else if (r.out && r.out === expected) {
-          this.feedback = "結果は合っています。練習中のコマンド grep を使って解いてみましょう。";
-        } else if (r.stages.some((s) => s[0] === "grep") && !r.err) {
-          this.feedback = `出力が違うようです。${this.word} を含む行だけになっていますか?`;
-        }
-      }
+      if (!r) return this.render();
+      if (!this.inChallenge) this.onStep(cmd);
+      else this.onChallenge(r);
       this.render();
+    }
+
+    onStep(cmd) {
+      const step = this.card.steps[this.step];
+      if (cmd.replace(/\s+/g, " ") === step.run) {
+        this.term.html(`<span class="c-green">✓</span> ${md(step.after)}`, "demo-after");
+        this.step++;
+        this.hints = 0;
+        if (this.inChallenge) {
+          // お題の前に、こっそり別のディレクトリへ移動させる(cd ~/{{place}})
+          this.shell.run(`cd ~/${this.place}`);
+        }
+      } else {
+        this.feedback = [`自由に試して大丈夫です。先へ進むには \`${step.run}\` と打ってください。`, true];
+      }
+    }
+
+    onChallenge(r) {
+      const ch = this.card.challenge;
+      const ref = new Shell(this.shell.fs, `/home/you/${this.place}`).run(ch.solution).out;
+      const tokens = (s) => s.trim().split(/\s+/).join(" ");
+      const used = r.stages.some((s) => s[0] === this.card.command);
+      const resultOk = !r.err && tokens(r.out) === tokens(ref);
+      if (resultOk && used) {
+        this.step++;
+        const t = this.term;
+        t.html(`<span class="c-green"><b>正解!</b></span>  <span class="c-cyan">${this.card.command}</span> <span class="c-green">をおぼえた</span>`, "demo-after");
+        t.html(md(ch.done), "indent");
+        t.html(`<span class="c-dim">●○○○○  忘れかけた頃にもう一度。次の復習は明日です。</span>`, "indent demo-after");
+        return;
+      }
+      this.misses++;
+      if (resultOk) this.feedback = [`結果は合っています。ここでは \`${this.card.command}\` を使って出してみましょう。`, false];
+      else if (used) this.feedback = [`${this.card.command} は使えています。お題の答えとは、出力が違うようです。`, false];
+      else if (this.misses % SUGGEST_HINT_AFTER === 0) this.feedback = ["行き詰まったら `hint` と打つとヒントが出ます。", true];
     }
   }
 
@@ -955,13 +985,80 @@ http {
     };
   }
 
+  // 文章は oncall の missions/m01_error_ips/mission.toml と同じ。点数の付け方は scoring.py と同じ。
   const ONCALL_HINTS = [
-    "まずログの形を確かめましょう。`head -3 access.log` で先頭を見て、`nginx.conf` の `log_format` と見比べます。\n空白で区切ったとき、ステータスコード(`$status`)は左から何番目の列になるでしょうか。",
-    "`grep 500 access.log` では正しく数えられません。「500」という文字は、レスポンスサイズや URL にも現れるからです。\n列を指定して絞り込むには `awk` が向いています。ステータスコードは 9 列目なので、`awk '$9 == 500' access.log` で 500 の行だけを取り出せます。",
-    "「種類ごとに数えて多い順に並べる」定番の形があります。\n`awk '$9 == 500 {print $1}' access.log | sort | uniq -c | sort -rn | head -3`\nこれで件数と IP が出ます。あとは IP だけを `answer.txt` に保存するだけです(`>` でファイルに書き出せます)。",
+    {
+      cost: 10,
+      text: "まずログの形を確かめましょう。`head -3 access.log` で先頭を見て、`nginx.conf` の `log_format` と見比べます。\n\n空白で区切ったとき、ステータスコード(`$status`)は左から何番目の列になるでしょうか。",
+    },
+    {
+      cost: 15,
+      text: "`grep 500 access.log` では正しく数えられません。「500」という文字は、レスポンスサイズや URL にも現れるからです。\n\n列を指定して絞り込むには `awk` が向いています。ステータスコードは 9 列目なので、`awk '$9 == 500' access.log` で 500 の行だけを取り出せます。",
+    },
+    {
+      cost: 25,
+      text: "「種類ごとに数えて多い順に並べる」定番の形があります。\n\n`awk '$9 == 500 {print $1}' access.log | sort | uniq -c | sort -rn | head -3`\n\nこれで件数と IP が出ます。あとは IP だけを `answer.txt` に保存するだけです(`>` でファイルに書き出せます)。",
+    },
   ];
+  const ONCALL_DEBRIEF = {
+    solution: "awk '$9 == 500 {print $1}' access.log | sort | uniq -c | sort -rn | head -3 | awk '{print $2}' > answer.txt",
+    explanation: [
+      "パイプでつないだ各段の役割は次のとおりです。",
+      "",
+      "1. `awk '$9 == 500 {print $1}'`: 9 列目(ステータスコード)が 500 の行だけを選び、1 列目(送信元 IP)を出力します。",
+      "2. `sort`: 同じ IP を隣り合わせに並べます。`uniq` は隣り合う行しかまとめないので、先に並べ替えが必要です。",
+      "3. `uniq -c`: 同じ行をまとめ、先頭に件数を付けます。",
+      "4. `sort -rn`: 件数を数値として(`-n`)大きい順(`-r`)に並べます。",
+      "5. `head -3`: 上位 3 行だけを残します。",
+      "6. `awk '{print $2}' > answer.txt`: 件数の列を捨てて IP だけをファイルに保存します。",
+      "",
+      "**なぜ grep 500 ではだめなのか。**このログには、レスポンスサイズがちょうど 500 バイトの正常なリクエストや、URL に `/500` を含むリクエストが大量に混ざっていました。文字列として「500」を探すと、それらも一緒に数えてしまいます。「何列目の値か」を指定して絞り込むのが、ログ調査の基本です。",
+      "",
+      "`sort | uniq -c | sort -rn | head` は、ログから「多い順ランキング」を作る定番の組み合わせです。障害対応で何度も使うので、手が覚えるまで打っておく価値があります。",
+    ],
+    alternatives: [
+      {
+        command: `grep '" 500 ' access.log | cut -d' ' -f1 | sort | uniq -c | sort -rn | head -3 | awk '{print $2}' > answer.txt`,
+        note: "`grep` でも、リクエスト行を閉じる `\"` の直後という位置まで含めて指定すれば、ステータスコードの 500 だけに絞れます。`cut -d' ' -f1` は空白区切りの 1 列目を取り出します。",
+      },
+      {
+        command: "awk '$9 == 500 {n[$1]++} END {for (ip in n) print n[ip], ip}' access.log | sort -rn | head -3 | cut -d' ' -f2 > answer.txt",
+        note: "`awk` の連想配列で IP ごとの件数を数える方法です。`sort | uniq -c` の 2 段を `awk` の中で済ませられ、大きなログでは並べ替えが 1 回で済む分だけ速くなります。",
+      },
+    ],
+    commands: [
+      ["grep", "パターンに一致する行を取り出す"],
+      ["awk", "行を列に分けて、条件に合う行や列を取り出す"],
+      ["sort", "行を並べ替える"],
+      ["uniq", "隣り合う同じ行をまとめる"],
+      ["head", "先頭の数行だけを表示する"],
+    ],
+  };
   const PAR_TIME = 420;
   const PAR_COMMANDS = 12;
+  const HELPER_COMMANDS = new Set(["mission", "hint", "check", "zukan", "title"]);
+
+  // oncall の scoring.evaluate と同じ計算
+  function evaluate({ elapsed, commands, hintCosts, failedChecks }) {
+    const penalties = [];
+    if (hintCosts.length) penalties.push([`ヒント ${hintCosts.length} 個`, hintCosts.reduce((a, b) => a + b, 0)]);
+    if (failedChecks) penalties.push([`判定ミス ${failedChecks} 回`, Math.min(20, failedChecks * 5)]);
+    const overTime = Math.max(0, elapsed - PAR_TIME);
+    const timePenalty = Math.min(20, Math.floor((overTime / PAR_TIME) * 20));
+    if (timePenalty) penalties.push(["目安時間オーバー", timePenalty]);
+    const commandPenalty = Math.min(15, Math.max(0, commands - PAR_COMMANDS));
+    if (commandPenalty) penalties.push(["目安コマンド数オーバー", commandPenalty]);
+    const points = Math.max(0, 100 - penalties.reduce((s, [, p]) => s + p, 0));
+    const rank = points >= 95 ? "S" : points >= 80 ? "A" : points >= 60 ? "B" : "C";
+    return { points, rank, penalties };
+  }
+  // oncall の format_duration と同じ(「7 分」「6 分 12 秒」)
+  const duration = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds) % 60;
+    if (sec === 0 && m) return `${m} 分`;
+    return m ? `${m} 分 ${sec} 秒` : `${sec} 秒`;
+  };
 
   class Oncall {
     constructor(term) {
@@ -979,55 +1076,47 @@ http {
       fs.write("/home/you/incident/nginx.conf", NGINX_CONF);
       this.shell = new Shell(fs, "/home/you/incident");
       this.hints = 0;
-      this.misses = 0;
+      this.failedChecks = 0;
       this.commands = 0;
-      this.startedAt = null;
-      this.solved = false;
+      this.startedAt = Date.now();
+      this.score = null;
       this.feedback = "";
       const t = this.term;
       t.clear();
-      t.ops.innerHTML = `<i></i><span><span class="c-cyan">mission</span> 依頼 │ <span class="c-cyan">hint</span> ヒント │ <span class="c-cyan">check</span> 判定 │ <span class="c-cyan">title</span> 最初から</span>`;
+      t.ops.innerHTML = `<i></i><span><span class="c-cyan">mission</span> 依頼 │ <span class="c-cyan">hint</span> ヒント │ <span class="c-cyan">check</span> 判定 │ <span class="c-cyan">zukan</span> 図鑑 │ <span class="c-cyan">title</span> 最初から</span>`;
       t.setPrompt();
-      t.html(`<span class="c-red">[PAGER]</span> ${this.ctx.detectedAt} <span class="c-red">CRITICAL</span> prod-api-01: HTTP 500 rate &gt; 30%`, "c-yellow");
       this.showTicket();
       this.render();
     }
 
     promptHtml() {
-      return `<span class="c-green">●</span> <span class="c-green">you@prod-api-01:${esc(this.shell.prettyCwd())} $</span>`;
+      return `<span class="c-red">●</span> <span class="c-green">you@prod-api-01</span>:<span class="c-blue">${esc(this.shell.prettyCwd())}</span> <span class="c-green">$</span>`;
     }
 
     showTicket() {
       const c = this.ctx;
       this.term.html(
-        `<div class="demo-ticket">` +
-          `<div><b>${c.incidentId}</b>   重大度 <span class="c-red">SEV2</span>   検知 ${c.detectedAt}</div>` +
-          `<div class="c-dim">監視システム → オンコール担当(あなた)</div><br>` +
+        `<div class="demo-panel">` +
+          `<div class="demo-panel-title"><span class="c-red">● INCIDENT</span> <b>深夜の 500 祭り</b></div>` +
+          `<div>${c.incidentId}   重大度 SEV2   検知 ${c.detectedAt}</div>` +
+          `<div>監視システム → オンコール担当(あなた)</div><br>` +
           `<div>api-gateway の 500 エラー率が閾値を超えました。<br>特定のクライアントが異常なリクエストを送り続けている可能性があります。</div><br>` +
-          `<div class="c-purple">■ 依頼</div>` +
-          `<div class="indent">アクセスログ <code>~/incident/access.log</code> を調べ、<br>ステータスコード 500 を返されたリクエストが多い送信元 IP を<br>件数の多い順に上位 3 件、<code>~/incident/answer.txt</code> に保存してください。<br>(1 行に 1 つの IP)</div><br>` +
-          `<div class="c-purple">■ 資料</div>` +
-          `<div class="indent"><code>~/incident/nginx.conf</code>   ログの書式 (log_format)</div>` +
+          `<div>■ 依頼</div>` +
+          `<div class="indent">アクセスログ ~/incident/access.log を調べ、<br>ステータスコード 500 を返されたリクエストが多い送信元 IP を<br>件数の多い順に上位 3 件、~/incident/answer.txt に保存してください。<br>(1 行に 1 つの IP)</div><br>` +
+          `<div>■ 資料</div>` +
+          `<div class="indent">~/incident/nginx.conf   ログの書式 (log_format)</div>` +
+          `<div class="demo-panel-foot c-dim">目安 7 分 / 12 コマンド</div>` +
           `</div>`
       );
     }
 
-    elapsed() {
-      return this.startedAt ? Math.floor((Date.now() - this.startedAt) / 1000) : 0;
-    }
-
     render() {
-      const t = this.term;
-      const hint = this.hints
-        ? `<div class="indent c-yellow">ヒント ${this.hints}/3: ${md(ONCALL_HINTS[this.hints - 1].split("\n")[0])}</div>`
-        : "";
-      t.setStatus(
-        `<div><span class="c-red">●</span> <b>INCIDENT</b> 深夜の 500 祭り  <span class="c-dim">目安 7 分 / 12 コマンド</span></div>` +
-          (this.solved
-            ? `<div class="indent c-green">解決しました。</div>`
-            : `<div class="indent">mission で依頼をもう一度表示、check で解決したか判定します。</div>`) +
-          hint +
-          (this.feedback ? `<div class="indent c-yellow">→ ${this.feedback}</div>` : "")
+      this.term.setStatus(
+        `<div><span class="c-red">●</span> <span class="c-red">INCIDENT</span> <b>深夜の 500 祭り</b>  <span class="c-dim">目安 7 分 / 12 コマンド</span></div>` +
+          (this.score
+            ? `<div class="indent"><span class="c-green">解決済み</span>。別解を試すか、下の案内へどうぞ。</div>`
+            : `<div class="indent"><span class="c-cyan">mission</span> で依頼をもう一度表示、<span class="c-cyan">check</span> で解決したか判定します。</div>`) +
+          (this.feedback ? `<div class="indent c-yellow">→ ${md(this.feedback)}</div>` : "")
       );
     }
 
@@ -1037,6 +1126,7 @@ http {
       t.echo(line);
       if (!cmd) return;
       this.feedback = "";
+      const word = cmd.split(/\s+/)[0];
       if (cmd === "title") return this.start();
       if (cmd === "mission") {
         this.showTicket();
@@ -1046,40 +1136,48 @@ http {
         this.feedback = "exit はトップページで使えます。お試し版をやめるときは、このまま下へスクロールしてください。";
         return this.render();
       }
-      if (cmd === "zukan" || cmd.startsWith("zukan ")) {
-        this.feedback = "コマンド図鑑は、ダウンロード版で使えます。";
+      if (word === "zukan") {
+        t.html("コマンド図鑑は、ダウンロード版で使えます。", "c-dim");
         return this.render();
       }
-      if (this.solved) {
-        t.runShell(line);
-        return this.render();
-      }
-      if (cmd === "hint") {
-        if (this.hints < ONCALL_HINTS.length) {
-          this.hints++;
-          t.html(`<span class="c-yellow">ヒント ${this.hints}/3</span>(減点あり)`);
-          ONCALL_HINTS[this.hints - 1].split("\n").forEach((l) => t.html(md(l), "indent"));
-        } else this.feedback = "ヒントはこれで全部です。";
-        return this.render();
-      }
+      if (cmd === "hint") return this.hint();
       if (cmd === "check") return this.check();
-
-      if (!this.startedAt) this.startedAt = Date.now();
-      this.commands++;
+      if (!HELPER_COMMANDS.has(word)) this.commands++;
       t.runShell(line);
+      this.render();
+    }
+
+    hint() {
+      const t = this.term;
+      const newly = this.hints < ONCALL_HINTS.length;
+      if (newly) this.hints++;
+      ONCALL_HINTS.slice(0, this.hints).forEach((h, i) => {
+        t.html(
+          `<div class="demo-panel">` +
+            `<div class="demo-panel-title c-yellow">ヒント ${i + 1}/${ONCALL_HINTS.length}  (-${h.cost}pt)</div>` +
+            h.text.split("\n").map((l) => `<div>${l ? md(l) : "&nbsp;"}</div>`).join("") +
+            `</div>`
+        );
+      });
+      if (!newly) t.html("ヒントはこれで全部です。", "c-dim");
+      else if (this.score) t.html("クリア済みなので減点はありません。", "c-dim");
       this.render();
     }
 
     check() {
       const t = this.term;
-      const fs = this.shell.fs;
-      const text = fs.files.get("/home/you/incident/answer.txt");
+      if (this.score) {
+        t.html(`<span class="c-green">このインシデントは解決済みです。</span> title で最初からやり直せます。`);
+        return;
+      }
       const fail = (msg) => {
-        this.misses++;
+        this.failedChecks++;
         this.feedback = msg;
-        t.html(`<span class="c-red">✗ 判定</span> まだ解決していません(指摘は下に出ています)。`);
+        t.html(`<span class="c-red">✗ まだ解決していません</span>`);
+        t.html(md(msg));
         this.render();
       };
+      const text = this.shell.fs.files.get("/home/you/incident/answer.txt");
       if (text === undefined) return fail("`~/incident/answer.txt` がまだありません。結果をファイルに保存してください。");
       const lines = linesOf(text).filter((l) => l.trim());
       if (!lines.length) return fail("`answer.txt` が空です。");
@@ -1090,47 +1188,69 @@ http {
         found.push(ips[0]);
       }
       const ans = this.ctx.answer;
-      if (found.length !== ans.length) return fail(`上位 3 件を 3 行で保存してください(いまは ${found.length} 行あります)。`);
-      const same = found.every((ip, i) => ip === ans[i]);
-      if (!same) {
+      if (found.length !== ans.length) return fail(`上位 ${ans.length} 件を ${ans.length} 行で保存してください(いまは ${found.length} 行あります)。`);
+      if (!found.every((ip, i) => ip === ans[i])) {
         if ([...found].sort().join() === [...ans].sort().join()) return fail("3 つの IP は合っています。並び順(件数の多い順)を確認してください。");
         if (found.some((ip) => this.ctx.stringDecoys.includes(ip)))
           return fail("ステータスコードが 500 ではない IP が混ざっています。「500」という文字は、ステータスコード以外の場所にも現れていませんか?");
         if (found.includes(this.ctx.gatewayDecoy)) return fail("500 以外のエラー(502 など)まで数えていませんか? 依頼は「ステータスコード 500」だけです。");
         const correct = found.filter((ip) => ans.includes(ip)).length;
-        return fail(`3 件中 ${correct} 件が正解です。数え方をもう一度確認してください。`);
+        return fail(`${ans.length} 件中 ${correct} 件が正解です。数え方をもう一度確認してください。`);
       }
-      this.solved = true;
-      this.debrief();
+      const elapsed = (Date.now() - this.startedAt) / 1000;
+      this.score = {
+        ...evaluate({
+          elapsed,
+          commands: this.commands,
+          hintCosts: ONCALL_HINTS.slice(0, this.hints).map((h) => h.cost),
+          failedChecks: this.failedChecks,
+        }),
+        elapsed,
+      };
+      this.showResult();
+      this.showDebrief();
       this.render();
     }
 
-    debrief() {
-      const t = this.term;
-      const sec = this.elapsed();
-      let score = 100 - this.hints * 10 - this.misses * 5;
-      if (sec > PAR_TIME) score -= Math.min(15, Math.ceil((sec - PAR_TIME) / 60) * 3);
-      if (this.commands > PAR_COMMANDS) score -= Math.min(15, (this.commands - PAR_COMMANDS) * 2);
-      score = Math.max(0, score);
-      const rank = score >= 90 ? "S" : score >= 75 ? "A" : score >= 60 ? "B" : "C";
-      const rankCls = { S: "r-s", A: "r-a", B: "r-b", C: "r-c" }[rank];
-      t.html(
-        `<div class="demo-clear">` +
-          `<div class="c-green"><b>✓ INCIDENT RESOLVED</b>  深夜の 500 祭り</div>` +
-          `<div class="demo-rank"><span class="${rankCls}">${rank}</span> ${score}pt ・ ${Math.floor(sec / 60)} 分 ${sec % 60} 秒 ・ ${this.commands} コマンド ・ ヒント ${this.hints} ・ 判定ミス ${this.misses}</div>` +
-          `<div class="c-purple">■ 模範解答</div>` +
-          `<div class="indent"><code>awk '$9 == 500 {print $1}' access.log | sort | uniq -c | sort -rn | head -3 | awk '{print $2}' &gt; answer.txt</code></div>` +
-          `<ol class="demo-steps">` +
-          `<li><code>awk '$9 == 500 {print $1}'</code>: 9 列目(ステータスコード)が 500 の行だけを選び、1 列目(送信元 IP)を出力</li>` +
-          `<li><code>sort</code>: 同じ IP を隣り合わせに並べる(<code>uniq</code> は隣り合う行しかまとめない)</li>` +
-          `<li><code>uniq -c</code>: 同じ行をまとめ、先頭に件数を付ける</li>` +
-          `<li><code>sort -rn</code>: 件数を数値として大きい順に並べる</li>` +
-          `<li><code>head -3</code>: 上位 3 行だけを残す</li>` +
-          `<li><code>awk '{print $2}' &gt; answer.txt</code>: IP だけをファイルに保存</li>` +
-          `</ol>` +
-          `<div><b>なぜ grep 500 ではだめなのか。</b>このログには、レスポンスサイズがちょうど 500 バイトの正常なリクエストや、URL に <code>/500</code> を含むリクエストが大量に混ざっていました。「何列目の値か」を指定して絞り込むのが、ログ調査の基本です。</div>` +
+    showResult() {
+      const s = this.score;
+      const rankCls = { S: "r-s", A: "r-a", B: "r-b", C: "r-c" }[s.rank];
+      const row = (a, b, c = "") => `<span>${a}</span><span>${b}</span><span class="c-dim">${c}</span>`;
+      this.term.html(
+        `<div class="demo-panel demo-result">` +
+          `<div class="demo-panel-title c-green"><b>✓ INCIDENT RESOLVED</b></div>` +
+          `<div>ランク <b class="${rankCls}">${s.rank}</b>   ${s.points} pt   <span class="c-dim">初解決</span></div><br>` +
+          `<div class="demo-stats">` +
+          row("所要時間", duration(s.elapsed), `目安 ${duration(PAR_TIME)}`) +
+          row("コマンド数", this.commands, `目安 ${PAR_COMMANDS}`) +
+          row("ヒント", this.hints) +
+          row("判定ミス", this.failedChecks) +
+          `</div>` +
+          (s.penalties.length
+            ? "<br>" + s.penalties.map(([l, p]) => `<div class="c-dim">-${String(p).padStart(2)}  ${l}</div>`).join("")
+            : "") +
           `</div>`
       );
+    }
+
+    showDebrief() {
+      const t = this.term;
+      const d = ONCALL_DEBRIEF;
+      t.html(`<span class="c-purple">振り返り</span>`, "demo-rule");
+      t.html(`<span class="c-purple">▶ 模範解答</span>`);
+      t.html(`<code>${esc(d.solution)}</code>`);
+      t.html("&nbsp;");
+      d.explanation.forEach((l) => t.html(l ? md(l) : "&nbsp;"));
+      t.html("&nbsp;");
+      t.html(`<span class="c-purple">▶ 別解</span>`);
+      for (const alt of d.alternatives) {
+        t.html(`<code>${esc(alt.command)}</code>`);
+        t.html(md(alt.note));
+        t.html("&nbsp;");
+      }
+      t.html(`<span class="c-purple">▶ このミッションのコマンド</span>`);
+      t.html(`<div class="demo-stats">${d.commands.map(([c, s]) => `<span class="c-cyan">${c}</span><span>${s}</span><span class="c-yellow">NEW</span>`).join("")}</div>`);
+      t.html(`<span class="c-yellow">図鑑に ${d.commands.length} 個のコマンドを登録しました。</span>`, "demo-after");
       t.html(ctaHtml("oncall"), "demo-cta-wrap");
     }
   }
@@ -1140,8 +1260,8 @@ http {
       return (
         `<div class="demo-cta">` +
         `<div class="demo-cta-head">お試し版はここまでです。続きは、ダウンロードしてから。</div>` +
-        `<p>day-one には、<code>pwd</code> から <code>vim</code> まで、あと <b>37 個</b> のコマンドがあります。覚えたコマンドは、1 日 → 3 日 → 7 日 → 14 日 → 30 日の間隔で復習が回ってきます。</p>` +
-        `<div class="demo-cta-actions"><a class="btn" href="#start">./install.sh</a><button type="button" class="btn ghost" data-switch="oncall">oncall のお試しへ ▸</button><button type="button" class="btn ghost" data-restart>もう一度</button></div>` +
+        `<p>次のコマンドは <code>ls</code>。day-one には、<code>ls</code> から <code>vim</code> まで、あと <b>37 個</b> のコマンドがあります。覚えたコマンドは、1 日 → 3 日 → 7 日 → 14 日 → 30 日の間隔で復習が回ってきます。</p>` +
+        `<div class="demo-cta-actions"><a class="btn" href="#clone">./clone.sh</a><button type="button" class="btn ghost" data-switch="oncall">oncall のお試しへ ▸</button><button type="button" class="btn ghost" data-restart>もう一度</button></div>` +
         `</div>`
       );
     }
@@ -1149,8 +1269,9 @@ http {
       `<div class="demo-cta">` +
       `<div class="demo-cta-head">お試し版はここまでです。続きは、ダウンロードしてから。</div>` +
       `<p>oncall には、ディスクの逼迫、暴走プロセス、消えた注文…と、あと <b>6 つ</b> のインシデントがあります。先輩の作業を横で見る「見学」と、コマンド図鑑も、ダウンロード版で使えます。</p>` +
+      `<p class="c-dim">別解の 2 つ目(awk の連想配列)は、お試し版のシェルでは動きません。ダウンロード版では本物の bash で試せます。</p>` +
       `<p class="c-dim">コマンドがまだ不安なら、day-one で基礎を固めてから挑むのがおすすめです。</p>` +
-      `<div class="demo-cta-actions"><a class="btn" href="#start">./install.sh</a><button type="button" class="btn ghost" data-switch="dayone">day-one のお試しへ ▸</button><button type="button" class="btn ghost" data-restart>もう一度</button></div>` +
+      `<div class="demo-cta-actions"><a class="btn" href="#clone">./clone.sh</a><button type="button" class="btn ghost" data-switch="dayone">day-one のお試しへ ▸</button><button type="button" class="btn ghost" data-restart>もう一度</button></div>` +
       `</div>`
     );
   }

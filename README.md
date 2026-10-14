@@ -11,7 +11,7 @@ day-one で基礎を固め、oncall で障害対応に挑む、という学び�
 | `style.css` | 見た目(ターミナル風。色の意味は day-one と同じ) |
 | `main.js` | 文字を 1 文字ずつ出すアニメーション |
 | `tools/capture.py` | 本物の day-one と oncall を動かして画面を取り込み、`index.html` の画面の例を差し替える |
-| `demo.js` | お試し版(day-one の grep と、oncall のインシデント 1)。JS で書いた小さなシェルで動く |
+| `demo.js` | お試し版(day-one の pwd と、oncall のインシデント 1)。JS で書いた小さなシェルで動く |
 
 ビルドは不要です。ローカルで見るときは、このディレクトリで次を実行して http://localhost:8000 を開きます。
 
@@ -29,8 +29,8 @@ python3 -m http.server 8000
 
 「./try.sh」の節で、ブラウザの中で 1 つずつ体験できます。
 
-- **day-one**: `grep` のカード(説明 → 打ってみよう 3 つ → お題)。文章は day-one の `16_grep.toml` と同じです。
-- **oncall**: インシデント 1「深夜の 500 祭り」。ログの作り方(ひっかけを含む)、ヒント、判定の指摘、模範解答は oncall の `m01_error_ips` と同じです。
+- **day-one**: 最初のコマンド `pwd` のカード(説明 → 打ってみよう → お題)。文章は day-one の `01_pwd.toml` と、指摘の文言は `lesson.py` と同じです。
+- **oncall**: インシデント 1「深夜の 500 祭り」。ログの作り方(ひっかけを含む)、ヒントと減点、判定の指摘、点数とランク(`scoring.py`)、模範解答・解説・別解は oncall の `m01_error_ips` と同じです。
 
 本物は bash で動きますが、お試し版は `demo.js` の中の小さなシェルで動きます。
 使えるのは `ls` `cd` `pwd` `cat` `head` `tail` `echo` `grep` `sort` `uniq` `wc` `cut` `awk`(`条件 {print ...}` の形だけ)と、`|`、`>`、`>>` です。

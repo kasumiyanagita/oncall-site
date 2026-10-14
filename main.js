@@ -167,7 +167,7 @@ window.addEventListener("resize", fitCaps);
     try: "#try",
     features: "#common",
     retro: "#retro",
-    start: "#start",
+    clone: "#clone",
   };
   const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -233,7 +233,7 @@ window.addEventListener("resize", fitCaps);
       case "dayone":
       case "oncall":
         return print(
-          `ここはブラウザなので、${cmd} は動きません。<a href="#start">./install.sh</a> の手順で入れて、ターミナルで打ってください(<a href="#try">./try.sh</a> ならブラウザで試せます)。`,
+          `ここはブラウザなので、${cmd} は動きません。<a href="#clone">./clone.sh</a> の手順で入れて、ターミナルで打ってください(<a href="#try">./try.sh</a> ならブラウザで試せます)。`,
           "ft-err"
         );
       default:
@@ -269,4 +269,22 @@ window.addEventListener("resize", fitCaps);
     if (getComputedStyle(footer.querySelector(".ft-line")).display === "none") return;
     input.focus({ preventScroll: true });
   });
+})();
+
+// 上のメニューの ./app: day-one と oncall を下に並べる。マウスを乗せるか、押すと開く
+(() => {
+  const app = document.querySelector(".nav-app");
+  if (!app) return;
+  const btn = app.querySelector(".nav-app-btn");
+  const set = (open) => {
+    app.classList.toggle("open", open);
+    btn.setAttribute("aria-expanded", String(open));
+  };
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    set(!app.classList.contains("open"));
+  });
+  app.querySelectorAll(".nav-menu a").forEach((a) => a.addEventListener("click", () => set(false)));
+  document.addEventListener("click", (e) => { if (!app.contains(e.target)) set(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") set(false); });
 })();
