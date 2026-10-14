@@ -17,15 +17,21 @@
     return nodes;
   }
 
+  // コマンドの行だけを 1 文字ずつ打つ。打ち終えたら Enter を押したように光らせ、続く出力は一度にまとめて出す
   async function typeOut(el) {
     const isCmd = el.classList.contains("cmdline") || el.tagName === "H2";
-    const speed = Number(el.dataset.speed) || (isCmd ? 45 : 16);
+    if (!isCmd) {
+      el.classList.add("started", "shown-now");
+      await sleep(120);
+      return;
+    }
+    const speed = Number(el.dataset.speed) || 45;
     const nodes = textNodes(el).map((n) => ({ node: n, text: n.data }));
     nodes.forEach((n) => (n.node.data = ""));
     el.classList.add("started", "typing");
 
     for (const { node, text } of nodes) {
-      // コマンドのプロンプト部分は一度に出す(人が打つのはコマンドだけ)
+      // プロンプトの部分は一度に出す(人が打つのはコマンドだけ)
       if (node.parentElement.classList.contains("ps1")) {
         node.data = text;
         continue;
@@ -33,14 +39,14 @@
       for (let i = 0; i < text.length; i++) {
         if (skipAll) { node.data = text; break; }
         node.data += text[i];
-        const ch = text[i];
-        let wait = speed + (isCmd ? Math.random() * 40 : 0);
-        if ("。、．，!?".includes(ch)) wait += 120;
-        if (ch !== " " || isCmd) await sleep(wait);
+        await sleep(speed + Math.random() * 40);
       }
     }
+    // 打ち終えたら、少し間を置いて Enter
+    await sleep(320);
     el.classList.remove("typing");
-    await sleep(isCmd ? 380 : 180);
+    el.classList.add("entered");
+    await sleep(260);
   }
 
   async function runSection(section) {
@@ -69,7 +75,7 @@
   window.replayHero = () => {
     const hero = document.querySelector(".hero");
     hero.querySelectorAll(".caret-on").forEach((el) => el.classList.remove("caret-on"));
-    hero.querySelectorAll("[data-type]").forEach((el) => el.classList.remove("started", "typing"));
+    hero.querySelectorAll("[data-type]").forEach((el) => el.classList.remove("started", "typing", "shown-now", "entered"));
     hero.querySelectorAll(".fade").forEach((el) => el.classList.remove("shown"));
     delete hero.dataset.ran;
     skipAll = reduce;
