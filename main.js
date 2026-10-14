@@ -17,7 +17,7 @@
     return nodes;
   }
 
-  // コマンドの行だけを 1 文字ずつ打つ。打ち終えたら Enter を押したように光らせ、続く出力は一度にまとめて出す
+  // コマンドの行だけを 1 文字ずつ打つ。打ち終えたらカーソルが次の行へ移り(Enter)、続く出力は一度にまとめて出す
   async function typeOut(el) {
     const isCmd = el.classList.contains("cmdline") || el.tagName === "H2";
     if (!isCmd) {
@@ -42,11 +42,16 @@
         await sleep(speed + Math.random() * 40);
       }
     }
-    // 打ち終えたら、少し間を置いて Enter
+    // 打ち終えたら、少し間を置いて Enter: カーソルが次の行の先頭へ移り、そこへ出力が出る
     await sleep(320);
     el.classList.remove("typing");
-    el.classList.add("entered");
-    await sleep(260);
+    if (skipAll) return;
+    const next = document.createElement("div");
+    next.className = "next-line";
+    next.setAttribute("aria-hidden", "true");
+    el.after(next);
+    await sleep(220);
+    next.remove();
   }
 
   async function runSection(section) {
@@ -64,7 +69,7 @@
       }
     }
     // 最後に打った行にカーソルを残す(ヒーローとインストールの節だけ)
-    if (lastTyped && (section.classList.contains("hero") || section.id === "start")) {
+    if (lastTyped && (section.classList.contains("hero") || section.id === "clone")) {
       lastTyped.classList.add("caret-on");
     }
   }
@@ -75,7 +80,7 @@
   window.replayHero = () => {
     const hero = document.querySelector(".hero");
     hero.querySelectorAll(".caret-on").forEach((el) => el.classList.remove("caret-on"));
-    hero.querySelectorAll("[data-type]").forEach((el) => el.classList.remove("started", "typing", "shown-now", "entered"));
+    hero.querySelectorAll("[data-type]").forEach((el) => el.classList.remove("started", "typing", "shown-now"));
     hero.querySelectorAll(".fade").forEach((el) => el.classList.remove("shown"));
     delete hero.dataset.ran;
     skipAll = reduce;

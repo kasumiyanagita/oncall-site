@@ -154,12 +154,9 @@ h3 { font-size: 16px; color: var(--purple); margin: 0 0 10px; }
 @keyframes blink { 50% { opacity: 0; } }
 
 .js [data-type]:not(.started) { visibility: hidden; }
-/* 出力は一度にまとめて出す(ほんの少しだけ、ふわっと) */
-.js [data-type].shown-now { animation: out-in .18s ease-out; }
-@keyframes out-in { from { opacity: 0; } to { opacity: 1; } }
-/* Enter を押したとき: コマンドの行が一瞬だけ光る */
-.js [data-type].entered { animation: enter-flash .35s ease-out; }
-@keyframes enter-flash { 0% { background: rgba(78, 224, 138, .18); } 100% { background: transparent; } }
+/* Enter のあと、出力が出るまでの一瞬だけ、次の行の先頭にカーソルを置く(出力はそのあと一度に出す) */
+.next-line { height: 0; overflow: visible; }
+.next-line::before { content: "▌"; color: var(--green); display: block; line-height: 1.85; }
 .js .fade { opacity: 0; transform: translateY(8px); transition: opacity .5s ease, transform .5s ease; }
 .js .fade.shown { opacity: 1; transform: none; }
 
@@ -367,7 +364,6 @@ footer {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .js .fade { transition: none; }
-  .js [data-type].shown-now, .js [data-type].entered { animation: none; }
   .bar i { transition: none; }
 }
 
