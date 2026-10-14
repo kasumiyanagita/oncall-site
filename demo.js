@@ -230,7 +230,7 @@
       const fn = this["cmd_" + cmd];
       if (fn) return fn.call(this, args, stdin);
       if (["less", "more", "vim", "vi", "nano", "man", "top", "ssh", "sudo"].includes(cmd)) {
-        return { out: "", err: `${cmd}: お試し版では使えません。ダウンロード版では本物の bash で動きます。\n` };
+        return { out: "", err: `${cmd}: お試し版では使えません。clone した本物では bash で動きます。\n` };
       }
       return { out: "", err: `${cmd}: command not found\n` };
     }
@@ -492,7 +492,7 @@
     const m = prog.trim().match(/^([^{]*?)\s*(?:\{([^{}]*)\})?\s*$/);
     if (!m) throw new Error("お試し版の awk は「条件 {print $列}」の形だけに対応しています。");
     const [, pattern, action] = m;
-    if (/^(BEGIN|END)\b/.test(pattern)) throw new Error("お試し版の awk では BEGIN / END は使えません(ダウンロード版では使えます)。");
+    if (/^(BEGIN|END)\b/.test(pattern)) throw new Error("お試し版の awk では BEGIN / END は使えません(clone した本物では使えます)。");
 
     const value = (tok, ctx) => {
       tok = tok.trim();
@@ -553,7 +553,7 @@
     let print = (ctx) => ctx.line;
     if (action !== undefined && action.trim()) {
       const pm = action.trim().replace(/;$/, "").match(/^print\s*(.*)$/);
-      if (!pm) throw new Error("お試し版の awk の {} の中では print だけが使えます(ダウンロード版では何でも使えます)。");
+      if (!pm) throw new Error("お試し版の awk の {} の中では print だけが使えます(clone した本物では何でも使えます)。");
       if (pm[1].trim()) {
         const items = pm[1].split(",").map((it) => it.trim().match(/"[^"]*"|\S+/g) || []);
         items.flat().forEach((t) => value(t, { line: "", fields: [], NR: 0 }));
@@ -1137,7 +1137,7 @@ http {
         return this.render();
       }
       if (word === "zukan") {
-        t.html("コマンド図鑑は、ダウンロード版で使えます。", "c-dim");
+        t.html("コマンド図鑑は、clone した本物で使えます。", "c-dim");
         return this.render();
       }
       if (cmd === "hint") return this.hint();
@@ -1259,7 +1259,7 @@ http {
     if (which === "dayone") {
       return (
         `<div class="demo-cta">` +
-        `<div class="demo-cta-head">お試し版はここまでです。続きは、ダウンロードしてから。</div>` +
+        `<div class="demo-cta-head">お試し版はここまでです。続きは、下の GitHub リポジトリをそれぞれ clone してお試しください。</div>` +
         `<p>次のコマンドは <code>ls</code>。day-one には、<code>ls</code> から <code>vim</code> まで、あと <b>37 個</b> のコマンドがあります。覚えたコマンドは、1 日 → 3 日 → 7 日 → 14 日 → 30 日の間隔で復習が回ってきます。</p>` +
         `<div class="demo-cta-actions"><a class="btn" href="#clone">./clone.sh</a><button type="button" class="btn ghost" data-switch="oncall">oncall のお試しへ ▸</button><button type="button" class="btn ghost" data-restart>もう一度</button></div>` +
         `</div>`
@@ -1267,9 +1267,9 @@ http {
     }
     return (
       `<div class="demo-cta">` +
-      `<div class="demo-cta-head">お試し版はここまでです。続きは、ダウンロードしてから。</div>` +
-      `<p>oncall には、ディスクの逼迫、暴走プロセス、消えた注文…と、あと <b>6 つ</b> のインシデントがあります。先輩の作業を横で見る「見学」と、コマンド図鑑も、ダウンロード版で使えます。</p>` +
-      `<p class="c-dim">別解の 2 つ目(awk の連想配列)は、お試し版のシェルでは動きません。ダウンロード版では本物の bash で試せます。</p>` +
+      `<div class="demo-cta-head">お試し版はここまでです。続きは、下の GitHub リポジトリをそれぞれ clone してお試しください。</div>` +
+      `<p>oncall には、ディスクの逼迫、暴走プロセス、消えた注文…と、あと <b>6 つ</b> のインシデントがあります。先輩の作業を横で見る「見学」と、コマンド図鑑も、clone した本物で使えます。</p>` +
+      `<p class="c-dim">別解の 2 つ目(awk の連想配列)は、お試し版のシェルでは動きません。clone した本物では bash で試せます。</p>` +
       `<p class="c-dim">コマンドがまだ不安なら、day-one で基礎を固めてから挑むのがおすすめです。</p>` +
       `<div class="demo-cta-actions"><a class="btn" href="#clone">./clone.sh</a><button type="button" class="btn ghost" data-switch="dayone">day-one のお試しへ ▸</button><button type="button" class="btn ghost" data-restart>もう一度</button></div>` +
       `</div>`

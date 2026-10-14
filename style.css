@@ -555,12 +555,13 @@ footer {
   pointer-events: none;
 }
 /* 横線(左右とも、または片側) */
-.cap-screen .bd-l::before, .cap-screen .bd-r::before { top: calc(50% - var(--t) / 2); height: var(--t); background: currentColor; }
+/* 塗りではなく枠線で描く(枠線はピクセルの格子にそろえて描かれるので、細くても薄く割れて消えない) */
+.cap-screen .bd-l::before, .cap-screen .bd-r::before { top: calc(50% - var(--t) / 2); height: 0; border-top: var(--t) solid currentColor; }
 .cap-screen .bd-l.bd-r::before { left: 0; right: 0; }
 .cap-screen .bd-l:not(.bd-r)::before { left: 0; right: 50%; }
 .cap-screen .bd-r:not(.bd-l)::before { left: 50%; right: 0; }
 /* 縦線(上下とも、または片側) */
-.cap-screen .bd-u::after, .cap-screen .bd-d::after { left: calc(50% - var(--t) / 2); width: var(--t); background: currentColor; }
+.cap-screen .bd-u::after, .cap-screen .bd-d::after { left: calc(50% - var(--t) / 2); width: 0; border-left: var(--t) solid currentColor; }
 .cap-screen .bd-u.bd-d::after { top: 0; bottom: 0; }
 .cap-screen .bd-u:not(.bd-d)::after { top: 0; bottom: 50%; }
 .cap-screen .bd-d:not(.bd-u)::after { top: 50%; bottom: 0; }
@@ -575,28 +576,29 @@ footer {
 .cap-screen .bd-rur::before { left: calc(50% - var(--t) / 2); bottom: calc(50% - var(--t) / 2); border-left-width: var(--t); border-bottom-width: var(--t); border-bottom-left-radius: .45em; }
 .cap-screen .bd-rul::before { right: calc(50% - var(--t) / 2); bottom: calc(50% - var(--t) / 2); border-right-width: var(--t); border-bottom-width: var(--t); border-bottom-right-radius: .45em; }
 .cap-screen .w2 { width: calc(var(--adv) * 2em); text-align: center; font-family: "BIZ UDGothic", monospace; }
-.cap-screen .dm { opacity: .5; }
+/* 薄い文字: 半透明にすると細い線が消えるので、背景と半分ずつ混ぜた実色にする(Windows Terminal の dim と同じく半分の明るさ) */
+.cap-screen .dm { color: color-mix(in srgb, var(--fc, var(--t-fg)) 55%, var(--t-bg)); }
 .cap-screen .it { font-style: italic; }
 .cap-screen .un { text-decoration: underline; }
 .cap-screen .cur { font-weight: inherit; background: var(--t-cursor); color: var(--t-bg); animation: cur-blink 1s steps(1) infinite; }
 @keyframes cur-blink { 50% { background: transparent; color: inherit; } }
-.f-black { color: var(--black); } .b-black { background: var(--black); }
-.f-red { color: var(--red); } .b-red { background: var(--red); }
-.f-green { color: var(--green); } .b-green { background: var(--green); }
-.f-brown { color: var(--brown); } .b-brown { background: var(--brown); }
-.f-blue { color: var(--blue); } .b-blue { background: var(--blue); }
-.f-magenta { color: var(--magenta); } .b-magenta { background: var(--magenta); }
-.f-cyan { color: var(--cyan); } .b-cyan { background: var(--cyan); }
-.f-white { color: var(--white); } .b-white { background: var(--white); }
-.f-brightblack { color: var(--brightblack); } .b-brightblack { background: var(--brightblack); }
-.f-brightred { color: var(--brightred); } .b-brightred { background: var(--brightred); }
-.f-brightgreen { color: var(--brightgreen); } .b-brightgreen { background: var(--brightgreen); }
-.f-brightbrown { color: var(--brightbrown); } .b-brightbrown { background: var(--brightbrown); }
-.f-brightblue { color: var(--brightblue); } .b-brightblue { background: var(--brightblue); }
-.f-brightmagenta { color: var(--brightmagenta); } .b-brightmagenta { background: var(--brightmagenta); }
-.f-brightcyan { color: var(--brightcyan); } .b-brightcyan { background: var(--brightcyan); }
-.f-brightwhite { color: var(--brightwhite); } .b-brightwhite { background: var(--brightwhite); }
-.f-bg { color: var(--t-bg); } .b-fg { background: var(--t-fg); }
+.f-black { --fc: var(--black); color: var(--fc); } .b-black { background: var(--black); }
+.f-red { --fc: var(--red); color: var(--fc); } .b-red { background: var(--red); }
+.f-green { --fc: var(--green); color: var(--fc); } .b-green { background: var(--green); }
+.f-brown { --fc: var(--brown); color: var(--fc); } .b-brown { background: var(--brown); }
+.f-blue { --fc: var(--blue); color: var(--fc); } .b-blue { background: var(--blue); }
+.f-magenta { --fc: var(--magenta); color: var(--fc); } .b-magenta { background: var(--magenta); }
+.f-cyan { --fc: var(--cyan); color: var(--fc); } .b-cyan { background: var(--cyan); }
+.f-white { --fc: var(--white); color: var(--fc); } .b-white { background: var(--white); }
+.f-brightblack { --fc: var(--brightblack); color: var(--fc); } .b-brightblack { background: var(--brightblack); }
+.f-brightred { --fc: var(--brightred); color: var(--fc); } .b-brightred { background: var(--brightred); }
+.f-brightgreen { --fc: var(--brightgreen); color: var(--fc); } .b-brightgreen { background: var(--brightgreen); }
+.f-brightbrown { --fc: var(--brightbrown); color: var(--fc); } .b-brightbrown { background: var(--brightbrown); }
+.f-brightblue { --fc: var(--brightblue); color: var(--fc); } .b-brightblue { background: var(--brightblue); }
+.f-brightmagenta { --fc: var(--brightmagenta); color: var(--fc); } .b-brightmagenta { background: var(--brightmagenta); }
+.f-brightcyan { --fc: var(--brightcyan); color: var(--fc); } .b-brightcyan { background: var(--brightcyan); }
+.f-brightwhite { --fc: var(--brightwhite); color: var(--fc); } .b-brightwhite { background: var(--brightwhite); }
+.f-bg { --fc: var(--t-bg); color: var(--fc); } .b-fg { background: var(--t-fg); }
 
 /* レトロ: ブラウン管風(文字のにじみ・走査線・四隅の暗がり)。Windows Terminal の retroTerminalEffect を真似る */
 .cap-retro { position: relative; }

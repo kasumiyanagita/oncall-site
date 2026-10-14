@@ -17,9 +17,20 @@ class DimScreen(pyte.Screen):
     """pyte は dim(SGR 2)を覚えないので、使われていない blink の印に置き換えて覚えさせる。"""
 
     def select_graphic_rendition(self, *attrs, private=False):
-        mapped = [5 if a == 2 else 25 if a == 22 else a for a in attrs]
-        if 22 in attrs:  # 22 は bold と dim の両方を解除する
-            mapped.append(22)
+        mapped = []
+        i = 0
+        while i < len(attrs):
+            a = attrs[i]
+            if a in (38, 48) and i + 1 < len(attrs):
+                # 38;5;N(256 色)と 38;2;R;G;B(RGB)の中の数字は、色の指定なので置き換えない
+                n = 3 if attrs[i + 1] == 5 else 5 if attrs[i + 1] == 2 else 1
+                mapped.extend(attrs[i:i + n])
+                i += n
+                continue
+            mapped.append(5 if a == 2 else 25 if a == 22 else a)
+            if a == 22:  # 22 は bold と dim の両方を解除する
+                mapped.append(22)
+            i += 1
         super().select_graphic_rendition(*mapped)
 
 

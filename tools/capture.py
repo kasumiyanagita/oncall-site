@@ -76,7 +76,7 @@ def css_of(style: tuple) -> tuple[list[str], str]:
         if color == "default":
             continue
         if re.fullmatch(r"[0-9a-fA-F]{6}", color):
-            inline += f"{'color' if kind == 'f' else 'background'}:#{color};"
+            inline += f"--fc:#{color};color:#{color};" if kind == "f" else f"background:#{color};"
         else:
             classes.append(f"{kind}-{color}")
     if bold:
