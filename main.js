@@ -93,3 +93,47 @@
   if (skipBtn) skipBtn.addEventListener("click", skip);
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") skip(); });
 })();
+
+// 画面の例の窓: 上のタブで、同じ窓の中の画面を切り替える
+document.querySelectorAll(".win-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    const win = tab.closest(".window");
+    win.querySelectorAll(".win-tab").forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
+    win.querySelectorAll(".win-pane").forEach((p) => (p.hidden = p.dataset.cap !== tab.dataset.cap));
+    fitCaps();
+  });
+});
+
+// 取り込んだ画面の英数字を、ちょうど 1 桁の幅にそろえる。
+// ブラウザは文字の幅を整数のピクセルに丸めることがあり、そのままだと 100 桁で数ピクセルずれて、全角の箱と食い違う。
+// 実際の幅を測って、足りない分を字間で埋める。
+function fitCaps() {
+  document.querySelectorAll(".cap-screen").forEach((pre) => {
+    if (!pre.offsetWidth) return; // 隠れているタブは、表示したときに合わせる
+    pre.style.letterSpacing = "0px";
+    const probe = document.createElement("span");
+    probe.textContent = "x".repeat(50);
+    pre.appendChild(probe);
+    const actual = probe.getBoundingClientRect().width / 50;
+    probe.remove();
+    const style = getComputedStyle(pre);
+    const target = parseFloat(style.fontSize) * parseFloat(style.getPropertyValue("--adv"));
+    pre.style.letterSpacing = `${target - actual}px`;
+    // ● ◆ ★ などは、端末では 1 桁で描かれる。ブラウザが全角の字形で出してはみ出すものは、横に縮めて 1 桁に収める
+    pre.querySelectorAll(".w1:not(.bx)").forEach((el) => {
+      el.style.transform = "";
+      const r = document.createRange();
+      r.selectNodeContents(el);
+      const natural = r.getBoundingClientRect().width;
+      const line = el.classList.contains("hz");
+      if (natural && (natural > target * 1.05 || line)) {
+        // 横線は少しだけ長くして、隣の桁と重ねる(すき間を出さない)
+        el.style.transformOrigin = "left center";
+        el.style.transform = `scaleX(${(target * (line ? 1.08 : 1)) / natural})`;
+      }
+    });
+  });
+}
+fitCaps();
+if (document.fonts) document.fonts.ready.then(fitCaps);
+window.addEventListener("resize", fitCaps);

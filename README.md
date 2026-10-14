@@ -10,6 +10,7 @@ day-one で基礎を固め、oncall で障害対応に挑む、という学び�
 | `index.html` | ページの文章と構成 |
 | `style.css` | 見た目(ターミナル風。色の意味は day-one と同じ) |
 | `main.js` | 文字を 1 文字ずつ出すアニメーション |
+| `tools/capture.py` | 本物の day-one と oncall を動かして画面を取り込み、`index.html` の画面の例を差し替える |
 | `demo.js` | お試し版(day-one の grep と、oncall のインシデント 1)。JS で書いた小さなシェルで動く |
 
 ビルドは不要です。ローカルで見るときは、このディレクトリで次を実行して http://localhost:8000 を開きます。
@@ -34,3 +35,20 @@ python3 -m http.server 8000
 本物は bash で動きますが、お試し版は `demo.js` の中の小さなシェルで動きます。
 使えるのは `ls` `cd` `pwd` `cat` `head` `tail` `echo` `grep` `sort` `uniq` `wc` `cut` `awk`(`条件 {print ...}` の形だけ)と、`|`、`>`、`>>` です。
 最後まで進むと「続きは、ダウンロードしてから」の案内が出て、インストール手順へつながります。
+
+## 画面の例(本物から取り込む)
+
+day-one と oncall の紹介、見学、レトロのデザインの画面の例は、手で描いたものではなく、
+本物のアプリを 100 桁 × 30 行の端末で動かして取り込んだものです。アプリの見た目を変えたら、取り込み直します。
+
+```bash
+python3 -m venv .venv-tools
+.venv-tools/bin/pip install pyte
+.venv-tools/bin/python tools/capture.py              # すべて取り込み直す
+.venv-tools/bin/python tools/capture.py oncall-top   # 1 つだけ
+```
+
+- day-one と oncall は、このリポジトリと同じ階層(`personal-projects/`)にあり、それぞれ `.venv` が作ってある前提です。
+- 進捗は一時ディレクトリに作るので、ふだんのセーブデータには触れません。プロンプトのユーザー名は `you` にします。
+- `index.html` の `<!-- capture:名前 -->` 〜 `<!-- /capture:名前 -->` の間が置き換わります。どの場面でどのキーを送るかは `tools/capture.py` の `SCENES` にあります。
+- 色は、通常のデザインが Windows Terminal の既定の配色(Campbell)、レトロがアプリのプロファイルの配色です。
