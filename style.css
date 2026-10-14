@@ -539,7 +539,41 @@ footer {
 /* 全角や記号は、フォントによる幅の違いが出ないよう、1 桁・2 桁の箱に入れる(幅は 1 桁の幅から決める) */
 .cap-screen i { font-style: normal; display: inline-block; vertical-align: top; white-space: pre; letter-spacing: 0; }
 .cap-screen .w1 { width: calc(var(--adv) * 1em); text-align: left; }
-.cap-screen .bx { transform: scaleY(1.45); }
+/* 罫線: 字形は隠し、マスの中心からマスの端まで線を引く。隣のマスの線と端で重なるので、すき間ができない */
+.cap-screen .bd {
+  position: relative;
+  width: calc(var(--adv) * 1em);
+  height: 1.3em;
+  color: inherit;
+  -webkit-text-fill-color: transparent;
+  --t: 1px;
+}
+.cap-screen .bd-b { --t: 2px; }
+.cap-screen .bd::before, .cap-screen .bd::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+/* 横線(左右とも、または片側) */
+.cap-screen .bd-l::before, .cap-screen .bd-r::before { top: calc(50% - var(--t) / 2); height: var(--t); background: currentColor; }
+.cap-screen .bd-l.bd-r::before { left: 0; right: 0; }
+.cap-screen .bd-l:not(.bd-r)::before { left: 0; right: 50%; }
+.cap-screen .bd-r:not(.bd-l)::before { left: 50%; right: 0; }
+/* 縦線(上下とも、または片側) */
+.cap-screen .bd-u::after, .cap-screen .bd-d::after { left: calc(50% - var(--t) / 2); width: var(--t); background: currentColor; }
+.cap-screen .bd-u.bd-d::after { top: 0; bottom: 0; }
+.cap-screen .bd-u:not(.bd-d)::after { top: 0; bottom: 50%; }
+.cap-screen .bd-d:not(.bd-u)::after { top: 50%; bottom: 0; }
+/* 角丸(╭ ╮ ╰ ╯): マスの中心から 2 方向へ伸びる、角の丸い枠の一部を描く */
+.cap-screen .bd-rdr::before, .cap-screen .bd-rdl::before, .cap-screen .bd-rur::before, .cap-screen .bd-rul::before {
+  width: calc(50% + var(--t) / 2);
+  height: calc(50% + var(--t) / 2);
+  border: 0 solid currentColor;
+}
+.cap-screen .bd-rdr::before { left: calc(50% - var(--t) / 2); top: calc(50% - var(--t) / 2); border-left-width: var(--t); border-top-width: var(--t); border-top-left-radius: .45em; }
+.cap-screen .bd-rdl::before { right: calc(50% - var(--t) / 2); top: calc(50% - var(--t) / 2); border-right-width: var(--t); border-top-width: var(--t); border-top-right-radius: .45em; }
+.cap-screen .bd-rur::before { left: calc(50% - var(--t) / 2); bottom: calc(50% - var(--t) / 2); border-left-width: var(--t); border-bottom-width: var(--t); border-bottom-left-radius: .45em; }
+.cap-screen .bd-rul::before { right: calc(50% - var(--t) / 2); bottom: calc(50% - var(--t) / 2); border-right-width: var(--t); border-bottom-width: var(--t); border-bottom-right-radius: .45em; }
 .cap-screen .w2 { width: calc(var(--adv) * 2em); text-align: center; font-family: "BIZ UDGothic", monospace; }
 .cap-screen .dm { opacity: .5; }
 .cap-screen .it { font-style: italic; }

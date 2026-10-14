@@ -43,10 +43,15 @@ COLS, ROWS = 100, 30
 
 # ---- 画面 → HTML ---------------------------------------------------------------
 
-# 縦の線を含む罫線。行の高さいっぱいに伸ばして、上下の行とつなげる
-VERTICAL_BOX = set("│┃╭╮╰╯┌┐└┘├┤┬┴┼║")
-# 横の線。1 桁の幅いっぱいに伸ばして、左右の桁とつなげる
-HORIZONTAL_BOX = set("─━═")
+# 罫線の文字は、フォントの字形ではなく CSS の線で描く(マス目いっぱいに引くので、上下左右とすき間なくつながる)。
+# 値は、そのマスで線を引く向き(u 上 / d 下 / l 左 / r 右)と太線(b)の印。rdr などは角丸(r)と、線の伸びる 2 方向
+BOX = {
+    "─": "l r", "━": "l r b", "═": "l r b",
+    "│": "u d", "┃": "u d b", "║": "u d b",
+    "╭": "rdr", "╮": "rdl", "╰": "rur", "╯": "rul",
+    "┌": "d r", "┐": "d l", "└": "u r", "┘": "u l",
+    "├": "u d r", "┤": "u d l", "┬": "l r d", "┴": "l r u", "┼": "u d l r",
+}
 
 
 def cell_width(ch: str) -> int:
@@ -108,10 +113,9 @@ def render(app: App, theme: str, label: str, show_cursor: bool = True) -> str:
             w = cell_width(ch[0])
             if ch.isascii():
                 piece = html.escape(ch)
-            elif ch in HORIZONTAL_BOX:
-                piece = f'<i class="w1 hz">{html.escape(ch)}</i>'
-            elif ch in VERTICAL_BOX:
-                piece = f'<i class="w1 bx">{html.escape(ch)}</i>'
+            elif ch in BOX:
+                sides = " ".join(f"bd-{s}" for s in BOX[ch].split())
+                piece = f'<i class="bd {sides}">{html.escape(ch)}</i>'
             else:
                 piece = f'<i class="w{w}">{html.escape(ch)}</i>'
             if show_cursor and not cur.hidden and y == cur.y and x == cur.x:

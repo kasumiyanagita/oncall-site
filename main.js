@@ -131,16 +131,14 @@ function fitCaps() {
     const target = parseFloat(style.fontSize) * parseFloat(style.getPropertyValue("--adv"));
     pre.style.letterSpacing = `${target - actual}px`;
     // ● ◆ ★ などは、端末では 1 桁で描かれる。ブラウザが全角の字形で出してはみ出すものは、横に縮めて 1 桁に収める
-    pre.querySelectorAll(".w1:not(.bx)").forEach((el) => {
+    pre.querySelectorAll(".w1").forEach((el) => {
       el.style.transform = "";
       const r = document.createRange();
       r.selectNodeContents(el);
       const natural = r.getBoundingClientRect().width;
-      const line = el.classList.contains("hz");
-      if (natural && (natural > target * 1.05 || line)) {
-        // 横線は少しだけ長くして、隣の桁と重ねる(すき間を出さない)
+      if (natural > target * 1.05) {
         el.style.transformOrigin = "left center";
-        el.style.transform = `scaleX(${(target * (line ? 1.08 : 1)) / natural})`;
+        el.style.transform = `scaleX(${target / natural})`;
       }
     });
   });
