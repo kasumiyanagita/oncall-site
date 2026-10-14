@@ -32,7 +32,7 @@
   <h1 class="logo" aria-label="day-one から oncall へ"><span class="hl-cyan">day-one</span><span class="logo-arrow">━▶</span><span class="hl-red">oncall</span></h1>
   <div class="seq">
     <p data-type class="cmdline"><span class="ps1">you@terminal:~$</span> whoami</p>
-    <p data-type class="out">新人。Linux のコマンドは、まだほとんど打ったことがない。</p>
+    <p data-type class="out">新人 SRE。Linux のコマンドは、まだほとんど打ったことがない。</p>
     <p data-type class="cmdline"><span class="ps1">you@terminal:~$</span> cat goal.txt</p>
     <p data-type class="out lead">深夜にページャーが鳴っても、<br>落ち着いてサーバーに入り、<span class="hl-green">自分の手で原因を突き止められる</span>ようになる。</p>
     <p data-type class="cmdline"><span class="ps1">you@terminal:~$</span> ls ~/apps</p>
@@ -504,8 +504,14 @@ ln -sf "$PWD/.venv/bin/oncall" ~/.local/bin/oncall
 
 </main>
 
-<footer>
-  <span class="ps1">you@terminal:~$</span> exit <span class="c-dim"># exit はトップページで使えます。</span>
+<footer class="footer-term" id="end">
+  <div class="ft-log" aria-live="polite"></div>
+  <label class="ft-line">
+    <span class="ps1">you@terminal:~$</span>
+    <input class="ft-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+           placeholder="cd ~ と打つと、トップページに戻ります(help で使えるコマンド)" aria-label="コマンドを入力">
+  </label>
+  <p class="ft-static"><span class="ps1">you@terminal:~$</span> <a href="#top">cd ~</a> <span class="c-dim"># ↑ トップページに戻る</span></p>
 </footer>
 
 <button class="skip" type="button" aria-label="アニメーションを飛ばす">skip ▸▸</button>

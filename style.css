@@ -285,6 +285,27 @@ footer {
   font-family: var(--mono);
   font-size: 13px;
 }
+/* 最後のプロンプト: パソコン(マウスで操作できて、幅のある画面)では打てる。スマホではリンクだけ */
+.ft-line { display: none; align-items: center; gap: .6em; cursor: text; }
+.ft-input {
+  flex: 1; min-width: 0;
+  font: inherit; color: var(--fg);
+  background: transparent; border: 0; outline: none; padding: 0;
+  caret-color: var(--green);
+}
+.ft-input::placeholder { color: var(--dim); opacity: .8; }
+.ft-log { white-space: pre-wrap; }
+.ft-log:empty { display: none; }
+.ft-log .ft-echo { margin-top: 6px; }
+.ft-help { display: grid; grid-template-columns: max-content 1fr; gap: 0 2.5em; }
+.ft-log .ft-out { color: var(--fg); }
+.ft-log .ft-err { color: var(--yellow); }
+.ft-log a { color: var(--cyan); }
+.ft-static a { color: var(--cyan); }
+@media (hover: hover) and (pointer: fine) and (min-width: 761px) {
+  .ft-line { display: flex; }
+  .ft-static { display: none; }
+}
 .skip {
   position: fixed; right: 16px; bottom: 16px; z-index: 45;
   font-family: var(--mono); font-size: 12px;

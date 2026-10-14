@@ -65,6 +65,17 @@
 
   const sections = [...document.querySelectorAll(".screen")];
 
+  // トップページに戻ったときに、最初の打ち込みをもう一度見せる
+  window.replayHero = () => {
+    const hero = document.querySelector(".hero");
+    hero.querySelectorAll(".caret-on").forEach((el) => el.classList.remove("caret-on"));
+    hero.querySelectorAll("[data-type]").forEach((el) => el.classList.remove("started", "typing"));
+    hero.querySelectorAll(".fade").forEach((el) => el.classList.remove("shown"));
+    delete hero.dataset.ran;
+    skipAll = reduce;
+    runSection(hero);
+  };
+
   if (skipAll) {
     sections.forEach(runSection);
     if (skipBtn) skipBtn.hidden = true;
@@ -137,3 +148,125 @@ function fitCaps() {
 fitCaps();
 if (document.fonts) document.fonts.ready.then(fitCaps);
 window.addEventListener("resize", fitCaps);
+
+// ページの最後のプロンプト(パソコンだけ)。cd ~ でトップページに戻る
+(() => {
+  const footer = document.querySelector(".footer-term");
+  if (!footer) return;
+  const input = footer.querySelector(".ft-input");
+  const log = footer.querySelector(".ft-log");
+  const history = [];
+  let hpos = 0;
+
+  // 移れる場所。cd のあとに書く名前と、ページの中の位置
+  const PLACES = {
+    flow: "#flow",
+    "day-one": "#day-one",
+    dayone: "#day-one",
+    oncall: "#oncall",
+    try: "#try",
+    features: "#common",
+    retro: "#retro",
+    start: "#start",
+  };
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  function print(html, cls = "ft-out") {
+    const div = document.createElement("div");
+    div.className = cls;
+    div.innerHTML = html;
+    log.appendChild(div);
+  }
+
+  function goTop() {
+    print("トップページに戻ります…", "ft-out c-green");
+    input.blur();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    // スクロールし終えてから、最初の打ち込みを流し直す
+    let done = false;
+    const replay = () => {
+      if (done) return;
+      done = true;
+      if (window.replayHero) window.replayHero();
+    };
+    window.addEventListener("scrollend", replay, { once: true });
+    setTimeout(replay, 1500);
+  }
+
+  function run(line) {
+    const [cmd, ...args] = line.trim().split(/\s+/);
+    const arg = (args[0] || "").replace(/^(\.\/|~\/)/, "").replace(/\/$/, "");
+    switch (cmd) {
+      case "cd":
+        if (!args.length || ["~", "/", "..", "top"].includes(args[0])) return goTop();
+        if (PLACES[arg]) {
+          document.querySelector(PLACES[arg]).scrollIntoView({ behavior: "smooth" });
+          return print(`${esc(arg)}/ へ移動します`);
+        }
+        return print(`cd: ${esc(args[0])}: No such file or directory(ls で行き先を確かめられます)`, "ft-err");
+      case "top":
+        return goTop();
+      case "ls":
+        return print(Object.keys(PLACES).filter((k) => k !== "dayone").map((k) => `<span class="c-cyan">${k}/</span>`).join("  "));
+      case "pwd":
+        return print("/home/you/oncall-site");
+      case "whoami":
+        return print("新人 SRE。");
+      case "clear":
+        log.innerHTML = "";
+        return;
+      case "help":
+        return print(
+          `<div class="ft-help">` +
+            [
+              ["cd ~", "トップページに戻る(top でも)"],
+              ["cd 名前", "その節へ移る(例: cd oncall、cd try)"],
+              ["ls", "移れる節の一覧"],
+              ["clear", "この欄を消す"],
+            ]
+              .map(([c, d]) => `<span class="c-cyan">${c}</span><span>${d}</span>`)
+              .join("") +
+            `</div>`
+        );
+      case "exit":
+        return print("exit はトップページで使えます。cd ~ でトップページに戻れます。", "ft-err");
+      case "dayone":
+      case "oncall":
+        return print(
+          `ここはブラウザなので、${cmd} は動きません。<a href="#start">./install.sh</a> の手順で入れて、ターミナルで打ってください(<a href="#try">./try.sh</a> ならブラウザで試せます)。`,
+          "ft-err"
+        );
+      default:
+        return print(`${esc(cmd)}: command not found(help で使えるコマンドが出ます)`, "ft-err");
+    }
+  }
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const line = input.value;
+      input.value = "";
+      if (!line.trim()) return;
+      history.push(line);
+      hpos = history.length;
+      print(`<span class="ps1">you@terminal:~$</span> ${esc(line)}`, "ft-echo");
+      run(line);
+    } else if (e.key === "ArrowUp") {
+      if (hpos > 0) input.value = history[--hpos];
+      e.preventDefault();
+    } else if (e.key === "ArrowDown") {
+      if (hpos < history.length) input.value = history[++hpos] ?? "";
+      e.preventDefault();
+    }
+  });
+
+  // 最後のプロンプトが見えているあいだは、どこにいても文字を打ち始めれば入力欄に入る
+  let visible = false;
+  new IntersectionObserver((entries) => (visible = entries[0].isIntersecting), { threshold: 0.6 }).observe(footer);
+  document.addEventListener("keydown", (e) => {
+    if (!visible || e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
+    const t = document.activeElement;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+    if (getComputedStyle(footer.querySelector(".ft-line")).display === "none") return;
+    input.focus({ preventScroll: true });
+  });
+})();
