@@ -653,7 +653,8 @@
     }
 
     echo(line) {
-      this.html(`${this.prompt.innerHTML} ${esc(line)}`, "demo-echo");
+      // 本物と同じく、打った行は右端まで灰色の背景にし、打った文字を太字にする
+      this.html(`${this.prompt.innerHTML} <b>${esc(line)}</b>`, "demo-echo");
     }
 
     output(out, highlight, html) {

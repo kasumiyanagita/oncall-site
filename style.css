@@ -462,6 +462,7 @@ footer {
 }
 .demo-line { white-space: pre-wrap; word-break: break-all; }
 .demo-line.indent, .demo-status .indent { padding-left: 2em; }
+.demo-echo { background: #3a3a3a; color: #fff; }
 .demo-out { color: #d8e4dd; }
 .demo-title { margin-top: 4px; }
 .demo-after { margin: 2px 0 8px; }
