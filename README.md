@@ -11,7 +11,7 @@ day-one で基礎を固め、oncall で障害対応に挑む、という学び�
 | `style.css` | 見た目(ターミナル風。色の意味は day-one と同じ) |
 | `main.js` | 文字を 1 文字ずつ出すアニメーション |
 | `tools/capture.py` | 本物の day-one と oncall を動かして画面を取り込み、`index.html` の画面の例を差し替える |
-| `demo.js` | お試し版(day-one の pwd と、oncall のインシデント 1)。JS で書いた小さなシェルで動く |
+| `demo.js` | お試し版(day-one の pwd・ls・cd・cat・head と、oncall のインシデント 1)。JS で書いた小さなシェルで動く |
 
 ビルドは不要です。ローカルで見るときは、このディレクトリで次を実行して http://localhost:8000 を開きます。
 
@@ -29,7 +29,7 @@ python3 -m http.server 8000
 
 「./try.sh」の節で、ブラウザの中で 1 つずつ体験できます。
 
-- **day-one**: 最初のコマンド `pwd` のカード(説明 → 打ってみよう → お題)。文章は day-one の `01_pwd.toml` と、指摘の文言は `lesson.py` と同じです。
+- **day-one**: 最初の 5 つのコマンド `pwd` → `ls` → `cd` → `cat` → `head` のカード(説明 → 打ってみよう → お題)。本物と同じ順番で、1 枚終えると Enter で次のカードへ進みます。文章は day-one の `01_pwd.toml` 〜 `05_head.toml` と、指摘の文言は `lesson.py` と同じです。
 - **oncall**: インシデント 1「深夜の 500 祭り」。ログの作り方(ひっかけを含む)、ヒントと減点、判定の指摘、点数とランク(`scoring.py`)、模範解答・解説・別解は oncall の `m01_error_ips` と同じです。
 
 本物は bash で動きますが、お試し版は `demo.js` の中の小さなシェルで動きます。

@@ -1,4 +1,4 @@
-// お試し版: day-one の 1 コマンド(grep)と、oncall の 1 インシデント(深夜の 500 祭り)を、ブラウザの中で体験する。
+// お試し版: day-one の最初の 5 コマンド(pwd・ls・cd・cat・head)と、oncall の 1 インシデント(深夜の 500 祭り)を、ブラウザの中で体験する。
 // 本物は bash で動くが、ここでは JS で書いた小さなシェル(よく使うコマンドとパイプ、> だけ)で動かす。
 (() => {
   const root = document.querySelector("#demo");
@@ -190,9 +190,11 @@
 
       let input = null;
       let err = "";
+      let html = null;
       for (const argv of stages) {
         const r = this.exec(argv, input);
         input = r.out;
+        html = r.html ?? null;
         if (r.err) err += r.err;
       }
       let out = input || "";
@@ -202,7 +204,9 @@
         this.fs.write(path, before + out);
         out = "";
       }
-      return { out, err, redirected: !!redirect, stages };
+      // 色付きの表示(html)は、パイプや > を通さずに画面へ出すときだけ使う
+      if (redirect || stages.length > 1) html = null;
+      return { out, err, html, redirected: !!redirect, stages };
     }
 
     read(name, cmd) {
@@ -241,26 +245,38 @@
 
     cmd_cd(args) {
       const target = this.fs.resolve(this.cwd, args[0] || "~");
+      if (this.fs.files.has(target)) return { out: "", err: `cd: ${args[0]}: Not a directory\n` };
       if (!this.fs.dirs.has(target)) return { out: "", err: `cd: ${args[0]}: No such file or directory\n` };
       this.cwd = target;
       return { out: "" };
     }
 
     cmd_ls(args) {
-      const long = args.some((a) => /^-[a-zA-Z]*l/.test(a));
+      const flags = args.filter((a) => /^-[a-zA-Z]+$/.test(a)).join("");
+      const long = flags.includes("l");
+      const all = flags.includes("a");
       const targets = args.filter((a) => !a.startsWith("-"));
       const dir = this.fs.resolve(this.cwd, targets[0] || ".");
       if (this.fs.files.has(dir)) return { out: (targets[0]) + "\n" };
       if (!this.fs.dirs.has(dir)) return { out: "", err: `ls: cannot access '${targets[0]}': No such file or directory\n` };
-      const names = this.fs.children(dir);
-      if (!long) return { out: names.length ? names.join("  ") + "\n" : "" };
+      // 名前が . で始まるものは、-a のときだけ出す。並びは本物と同じく、先頭の . を無視する
+      let names = this.fs.children(dir);
+      if (all) names = [".", "..", ...names.sort((a, b) => (a.replace(/^\./, "") < b.replace(/^\./, "") ? -1 : 1))];
+      else names = names.filter((n) => !n.startsWith("."));
+      const isDir = (n) => n === "." || n === ".." || this.fs.dirs.has(dir === "/" ? "/" + n : dir + "/" + n);
+      // ディレクトリに色を付ける(本物の ls --color と同じ)
+      const paint = (n) => (isDir(n) ? `<span class="c-blue">${esc(n)}</span>` : esc(n));
+      if (!long) return { out: names.length ? names.join("  ") + "\n" : "", html: names.map(paint).join("  ") };
       const rows = names.map((n) => {
         const p = dir === "/" ? "/" + n : dir + "/" + n;
-        const isDir = this.fs.dirs.has(p);
-        const size = isDir ? 4096 : new Blob([this.fs.files.get(p)]).size;
-        return `${isDir ? "drwxr-xr-x" : "-rw-r--r--"} 1 you you ${String(size).padStart(7)} Oct 14 02:40 ${n}`;
+        const size = isDir(n) ? 4096 : new Blob([this.fs.files.get(p)]).size;
+        return [`${isDir(n) ? "drwxr-xr-x" : "-rw-r--r--"} 1 you you ${String(size).padStart(7)} Oct 14 02:40 `, n];
       });
-      return { out: `total ${names.length * 4}\n` + joinLines(rows) };
+      const total = `total ${names.length * 4}`;
+      return {
+        out: total + "\n" + joinLines(rows.map(([head, n]) => head + n)),
+        html: [esc(total), ...rows.map(([head, n]) => esc(head) + paint(n))].join("\n"),
+      };
     }
 
     cmd_cat(args, stdin) {
@@ -640,7 +656,11 @@
       this.html(`${this.prompt.innerHTML} ${esc(line)}`, "demo-echo");
     }
 
-    output(out, highlight) {
+    output(out, highlight, html) {
+      if (html) {
+        this.html(html, "demo-out");
+        return;
+      }
       const ls = linesOf(out);
       const shown = ls.slice(0, MAX_LINES);
       let h = esc(joinLines(shown));
@@ -691,7 +711,7 @@
         const pat = last.slice(1).find((a) => !/^-[a-zA-Z]+$/.test(a));
         if (pat && !/[vc]/.test(flags)) hl = grepRegex(pat, flags.includes("i"));
       }
-      this.output(r.out, hl);
+      this.output(r.out, hl, r.html);
       if (r.err) this.text(r.err.replace(/\n$/, ""), "c-red");
       this.setPrompt();
       return r;
@@ -706,58 +726,269 @@
     }
   }
 
-  // ================= day-one のお試し: 最初のコマンド pwd =================
-  // 文章は day-one の cards/01_pwd.toml と同じ。流れと指摘の文言は lesson.py に合わせてある。
-  const PWD_CARD = {
-    command: "pwd",
-    title: "いまいる場所を表示する",
-    summary: "いま作業しているディレクトリ(フォルダ)を、いちばん上の階層からの道順で表示します。",
-    when: "移動を繰り返して、自分がどこにいるか分からなくなったとき。ファイルを作ったり消したりする前に、場所を確かめたいとき。",
-    syntax: "pwd",
-    dirs: ["documents/reports", "documents/letters", "projects/website", "projects/notes", "pictures/trip", "music"],
-    places: ["documents/reports", "documents/letters", "projects/website", "projects/notes", "pictures/trip"],
-    steps: [
-      {
-        say: "ターミナルでは、いつも「どこかのディレクトリの中」にいます。`pwd` と打って Enter を押し、いまいる場所を確かめましょう。",
-        run: "pwd",
-        after: "`/` で区切られた道順(パス)が表示されました。ここは、あなた専用の作業場所である「ホームディレクトリ」です。",
+  // ================= day-one のお試し: 最初の 5 つのコマンド =================
+  // 文章は day-one の cards/01_pwd.toml 〜 05_head.toml と同じ。流れと指摘の文言は lesson.py に合わせてある。
+  // {{名前}} は vars から開くたびに選び直す(本物と同じ)
+  const CARDS = [
+    {
+      command: "pwd",
+      title: "いまいる場所を表示する",
+      summary: "いま作業しているディレクトリ(フォルダ)を、いちばん上の階層からの道順で表示します。",
+      when: "移動を繰り返して、自分がどこにいるか分からなくなったとき。ファイルを作ったり消したりする前に、場所を確かめたいとき。",
+      syntax: "pwd",
+      // 場所を自分で調べるカードなので、プロンプトには現在地を出さない
+      prompt: "plain",
+      dirs: ["documents/reports", "documents/letters", "projects/website", "projects/notes", "pictures/trip", "music"],
+      vars: { place: ["documents/reports", "documents/letters", "projects/website", "projects/notes", "pictures/trip"] },
+      steps: [
+        {
+          say: "ターミナルでは、いつも「どこかのディレクトリの中」にいます。`pwd` と打って Enter を押し、いまいる場所を確かめましょう。",
+          run: "pwd",
+          after: "`/` で区切られた道順(パス)が表示されました。ここは、あなた専用の作業場所である「ホームディレクトリ」です。",
+        },
+      ],
+      challenge: {
+        before: "cd ~/{{place}}",
+        ask: "いま、あなたを別のディレクトリへこっそり移動させました。どこにいるのか、表示して確かめてください。",
+        solution: "pwd",
+        hints: ["ここで覚えたコマンドを、そのまま打つだけです。", "`pwd` と打って Enter を押します。"],
+        done: "`pwd` は print working directory(作業中のディレクトリを表示)の略です。迷ったらまず `pwd`、と覚えておくと安心です。",
       },
-    ],
-    challenge: {
-      ask: "いま、あなたを別のディレクトリへこっそり移動させました。どこにいるのか、表示して確かめてください。",
-      solution: "pwd",
-      hints: ["ここで覚えたコマンドを、そのまま打つだけです。", "`pwd` と打って Enter を押します。"],
-      done: "`pwd` は print working directory(作業中のディレクトリを表示)の略です。迷ったらまず `pwd`、と覚えておくと安心です。",
     },
-  };
+    {
+      command: "ls",
+      title: "ファイルの一覧を表示する",
+      summary: "ディレクトリの中にあるファイルやディレクトリの名前を一覧にします。",
+      when: "いまいる場所に何があるか見たいとき。ファイルの名前を正確に思い出せないとき。大きさや更新日時を確かめたいとき。",
+      syntax: "ls [オプション] [ディレクトリ]",
+      dirs: ["pictures"],
+      vars: { dir: ["documents", "music", "pictures"] },
+      files: [
+        { path: "memo.txt", content: "牛乳を買う\n" },
+        { path: "todo.txt", content: "1. 部屋の掃除\n2. 図書館に本を返す\n" },
+        { path: ".settings", content: "theme=dark\n" },
+        { path: "documents/report.txt", content: "月次レポート\n" },
+        { path: "documents/letter.txt", content: "拝啓\n" },
+        { path: "documents/budget.csv", content: "item,price\n" },
+        { path: "music/morning.mp3" },
+        { path: "music/rain.mp3" },
+        { path: "pictures/cat.jpg" },
+        { path: "pictures/sea.jpg" },
+        { path: "pictures/trip/station.jpg" },
+      ],
+      steps: [
+        {
+          say: "`ls` と打って、いまいる場所に何があるか見てみましょう。",
+          run: "ls",
+          after: "名前の一覧が出ました。色が付いているものはディレクトリで、中にさらにファイルを入れられます。",
+        },
+        {
+          say: "名前だけでなく詳しい情報も見られます。`ls -l` と打ってみましょう。`-l` のように `-` で始まるものを「オプション」と呼び、コマンドの動きを切り替えます。",
+          run: "ls -l",
+          after: "1 行に 1 つずつ、権限・持ち主・大きさ・更新日時・名前の順に表示されました。行の先頭が `d` のものはディレクトリです。",
+        },
+        {
+          say: "名前が `.` で始まるファイルは、ふだんは一覧に出ません。`ls -a` と打つと、隠れているものも表示できます。",
+          run: "ls -a",
+          after: "`.settings` が現れました。設定ファイルなどは、こうして邪魔にならないよう隠されています。`.` はいまいる場所、`..` は 1 つ上の階層を表します。",
+        },
+      ],
+      challenge: {
+        ask: "`{{dir}}` ディレクトリの中に何が入っているか、一覧を表示してください。",
+        solution: "ls {{dir}}",
+        hints: ["`ls` のあとに空白をあけてディレクトリの名前を書くと、その中身を表示できます。", "`ls {{dir}}` と打ちます。"],
+        done: "`ls` は list の略です。移動した先でまず `ls` を打って、何があるか確かめるのが習慣になります。",
+      },
+    },
+    {
+      command: "cd",
+      title: "別のディレクトリへ移動する",
+      summary: "いまいる場所を、指定したディレクトリに変えます。",
+      when: "作業したいファイルがある場所へ行くとき。毎回長い道順を書かずに済むよう、先にその場所へ入っておきたいとき。",
+      syntax: "cd [ディレクトリ]",
+      dirs: ["documents/reports", "documents/letters", "projects/website", "projects/notes", "pictures/trip", "music"],
+      vars: { place: ["documents/reports", "documents/letters", "projects/website", "projects/notes", "pictures/trip"] },
+      steps: [
+        {
+          say: "`cd documents` と打って、documents ディレクトリの中へ入ってみましょう。プロンプト(入力を待っている行)の表示に注目してください。",
+          run: "cd documents",
+          after: "プロンプトが `~/documents` に変わりました。これがいまいる場所です。`~` はホームディレクトリを表す記号です。",
+        },
+        {
+          say: "1 つ上の階層へ戻るには `cd ..` と打ちます。`..` は「いまいる場所の 1 つ上」という意味です。",
+          run: "cd ..",
+          after: "ホームディレクトリに戻りました。",
+        },
+        {
+          say: "いま、あなたを奥のディレクトリへ移動させました(プロンプトを見てください)。ここから、行き先を書かずに `cd` とだけ打ってみましょう。",
+          run: "cd",
+          before: "cd ~/documents/reports",
+          after: "どこにいても、`cd` だけでホームディレクトリへ戻れます。迷ったときの帰り道です。",
+        },
+      ],
+      challenge: {
+        ask: "`{{place}}` へ移動してください。途中のディレクトリは `/` でつなげて、一度に書けます。",
+        solution: "cd ~/{{place}}",
+        check: "cwd",
+        hints: [
+          "`cd documents/reports` のように、通り道のディレクトリを `/` でつなげて書きます。1 つずつ `cd` を重ねても構いません。",
+          "ホームにいる状態で `cd {{place}}` と打ちます。",
+        ],
+        done: "`cd` は change directory の略です。`cd` で移動し、`pwd` で場所を確かめ、`ls` で中を見る。この 3 つがターミナルの中を歩き回る基本です。",
+      },
+    },
+    {
+      command: "cat",
+      title: "ファイルの中身を表示する",
+      summary: "ファイルの中身を、最初から最後までそのまま画面に出します。",
+      when: "短いファイルの中身をさっと確かめたいとき。いくつかのファイルを続けて表示したいとき。",
+      syntax: "cat [オプション] ファイル...",
+      vars: {
+        order: [
+          "morning.txt night.txt",
+          "night.txt morning.txt",
+          "noon.txt night.txt",
+          "night.txt noon.txt",
+          "morning.txt noon.txt",
+          "noon.txt morning.txt",
+        ],
+      },
+      files: [
+        { path: "memo.txt", content: "買うものリスト\n- 牛乳\n- たまご\n- 食パン\n" },
+        { path: "morning.txt", content: "朝: コーヒーをいれる\n" },
+        { path: "noon.txt", content: "昼: 公園を散歩する\n" },
+        { path: "night.txt", content: "夜: 本を読む\n" },
+      ],
+      steps: [
+        {
+          say: "`cat memo.txt` と打って、メモの中身を見てみましょう。`cat` のあとに、見たいファイルの名前を書きます。",
+          run: "cat memo.txt",
+          after: "ファイルの中身がそのまま表示されました。エディタを開かなくても、中身を確かめられます。",
+        },
+        {
+          say: "オプションを付けると表示が変わります。`cat -n memo.txt` と打ってみましょう。",
+          run: "cat -n memo.txt",
+          after: "行の先頭に番号が付きました。「3 行目を見て」のように、場所を伝えたいときに便利です。",
+        },
+      ],
+      challenge: {
+        ask: "`cat` は、ファイルの名前をいくつか並べると、その順番でつなげて表示します。次の 2 つのファイルを、この順番でつなげて表示してください: `{{order}}`",
+        solution: "cat {{order}}",
+        hints: ["ファイルの名前を、空白で区切って 2 つ並べます。", "`cat {{order}}` と打ちます。"],
+        done: "`cat` は concatenate(つなげる)の略で、もともとは複数のファイルをつなげるためのコマンドです。長いファイルは画面を流れていってしまうので、そのときは、あとで覚える `less` や `head` を使います。",
+      },
+    },
+    {
+      command: "head",
+      title: "ファイルの先頭だけを表示する",
+      summary: "ファイルの最初の数行だけを表示します。何も指定しなければ 10 行です。",
+      when: "大きなファイルがどんな形をしているか、少しだけ見て確かめたいとき。順位表やランキングの上位だけを見たいとき。",
+      syntax: "head [-n 行数] ファイル",
+      vars: { n: ["2", "4", "5", "7"] },
+      files: [{ path: "ranking.txt", lines: 24, line: "{n} 位  ゼッケン {n}0{n} 番" }],
+      steps: [
+        {
+          say: "`ranking.txt` は 24 行あります。`head ranking.txt` と打って、先頭だけを見てみましょう。",
+          run: "head ranking.txt",
+          after: "最初の 10 行だけが表示されました。全部を流さずに、どんなファイルかを確かめられます。",
+        },
+        {
+          say: "行数は `-n` で指定できます。`head -n 3 ranking.txt` と打ってみましょう。",
+          run: "head -n 3 ranking.txt",
+          after: "先頭の 3 行だけになりました。",
+        },
+      ],
+      challenge: {
+        ask: "`ranking.txt` の上位 {{n}} 人(先頭の {{n}} 行)を表示してください。",
+        solution: "head -n {{n}} ranking.txt",
+        hints: ["`-n` のあとに、表示したい行数を書きます。", "`head -n {{n}} ranking.txt` と打ちます。"],
+        done: "何万行もあるログでも、`head` なら一瞬で先頭を確かめられます。中身を知らないファイルは、`cat` で全部流す前にまず `head` で覗くのが安全です。",
+      },
+    },
+  ];
+  const DAYONE_HOME = "/home/you";
+  // 試し打ちでお手本と違うコマンドがこの回数続いたら、お手本をもう一度示す
+  const REMIND_AFTER = 2;
   const SUGGEST_HINT_AFTER = 3;
+
+  // {{名前}} を、vars から選んだ値に置き換えたカードを作る
+  function instantiate(card, rng) {
+    const chosen = {};
+    for (const [k, choices] of Object.entries(card.vars || {})) chosen[k] = rng.pick(choices);
+    return JSON.parse(JSON.stringify(card).replace(/\{\{(\w+)\}\}/g, (m, k) => chosen[k] ?? m));
+  }
+
+  function buildFs(card) {
+    const fs = new FS(DAYONE_HOME);
+    const addDirs = (rel) => {
+      let p = DAYONE_HOME;
+      for (const part of rel.split("/")) fs.addDir((p += "/" + part));
+    };
+    for (const d of card.dirs || []) addDirs(d);
+    for (const f of card.files || []) {
+      const parent = f.path.split("/").slice(0, -1).join("/");
+      if (parent) addDirs(parent);
+      // lines と line があれば、{n} に行番号を入れた行を lines 行ぶん並べる
+      const content = f.lines
+        ? Array.from({ length: f.lines }, (_, i) => f.line.replaceAll("{n}", String(i + 1)) + "\n").join("")
+        : f.content || "";
+      fs.write(`${DAYONE_HOME}/${f.path}`, content);
+    }
+    return fs;
+  }
+
+  // typed が、お手本 example と同じコマンド・引数で、お手本のオプションを含んでいるか(judge.py の follows_example)。
+  // 語の順序と、オプションの追加は問わない。`-l` と `-a` をまとめた `-la` のような書き方も認める
+  function followsExample(typed, example) {
+    const split = (line) => {
+      const words = line.replace(/(>>|>|\|)/g, " $1 ").split(/\s+/).filter(Boolean);
+      const isFlag = (w) => /^-\w+$/.test(w);
+      return {
+        words: words.filter((w) => !isFlag(w)).sort().join(" "),
+        flags: new Set(words.filter(isFlag).flatMap((w) => [...w.slice(1)])),
+      };
+    };
+    const t = split(typed);
+    const e = split(example);
+    return t.words === e.words && [...e.flags].every((f) => t.flags.has(f));
+  }
 
   class DayOne {
     constructor(term) {
       this.term = term;
       term.app = this;
-      this.start();
+      this.start(0);
     }
 
-    start() {
-      const card = (this.card = PWD_CARD);
-      const rng = makeRng(Date.now());
-      this.place = rng.pick(card.places);
-      const fs = new FS("/home/you");
-      for (const d of card.dirs) {
-        let p = "/home/you";
-        for (const part of d.split("/")) fs.addDir((p += "/" + part));
-      }
-      this.shell = new Shell(fs, "/home/you");
+    start(index = this.index) {
+      this.index = index;
+      const card = (this.card = instantiate(CARDS[index], makeRng(Date.now())));
+      this.shell = new Shell(buildFs(card), DAYONE_HOME);
+      this.reference = this.computeReference();
       this.step = 0; // steps.length 未満 = 打ってみよう、steps.length = お題、それより大きい = 正解
+      this.stepMisses = 0;
       this.hints = 0;
       this.misses = 0;
+      this.used = new Set(); // お題に入ってから使ったコマンド
       this.feedback = null; // [文, muted か]
       this.term.clear();
       this.term.ops.innerHTML = `<span class="lbl c-cyan">${card.command}</span><i></i><span><span class="c-cyan">hint</span> ヒント │ <span class="c-cyan">card</span> 説明 │ <span class="c-cyan">title</span> 最初から</span>`;
-      this.term.setPrompt();
       this.showCard();
+      this.enterStage();
       this.render();
+    }
+
+    // 試し打ちのお手本を順に実行したうえで、お題のお手本を実行して結果を記録する(lesson.py の compute_reference)
+    computeReference() {
+      const c = this.card;
+      const sh = new Shell(buildFs(c), DAYONE_HOME);
+      for (const s of c.steps) {
+        if (s.before) sh.run(s.before);
+        sh.run(s.run);
+      }
+      if (c.challenge.before) sh.run(c.challenge.before);
+      const r = sh.run(c.challenge.solution);
+      return { out: r.out, cwd: sh.cwd };
     }
 
     get inChallenge() {
@@ -768,9 +999,21 @@
       return this.step > this.card.steps.length;
     }
 
-    // このカードは「場所を自分で調べる」ので、プロンプトに現在地を出さない(prompt = "plain")
+    get next() {
+      return CARDS[this.index + 1];
+    }
+
+    // pwd のカードは「場所を自分で調べる」ので、プロンプトに現在地を出さない(prompt = "plain")
     promptHtml() {
-      return `<span class="c-green">$</span>`;
+      if (this.card.prompt === "plain") return `<span class="c-green">$</span>`;
+      return `<span class="c-blue">${esc(this.shell.prettyCwd())}</span> <span class="c-green">$</span>`;
+    }
+
+    // いまの段階(試し打ちの 1 手、またはお題)に入る。画面に出さずに実行しておくコマンドがあれば実行する
+    enterStage() {
+      const before = this.inChallenge ? this.card.challenge.before : this.card.steps[this.step].before;
+      if (before) this.shell.run(before);
+      this.term.setPrompt();
     }
 
     showCard() {
@@ -795,9 +1038,12 @@
     render() {
       const t = this.term;
       if (this.done) {
+        const go = this.next
+          ? `<span class="c-cyan">Enter</span> で新しいコマンド <span class="c-cyan">${this.next.command}</span> へ進む`
+          : `<span class="c-cyan">Enter</span> でお試し版の続きの案内へ`;
         t.setStatus(
           `<div><span class="c-purple">▶ 次へ</span></div>` +
-            `<div class="indent"><span class="c-cyan">Enter</span> で新しいコマンド <span class="c-cyan">ls</span> へ進む</div>` +
+            `<div class="indent">${go}</div>` +
             `<div class="indent"><span class="c-cyan">r</span> もう一度   <span class="c-cyan">title</span> 最初から</div>`
         );
         return;
@@ -833,8 +1079,10 @@
       t.echo(line);
       this.feedback = null;
       if (this.done) {
-        if (cmd === "r" || cmd === "retry" || cmd === "title") return this.start();
+        if (cmd === "r" || cmd === "retry") return this.start();
+        if (cmd === "title") return this.start(0);
         if (cmd === "") {
+          if (this.next) return this.start(this.index + 1);
           t.html(ctaHtml("dayone"), "demo-cta-wrap");
           return;
         }
@@ -842,7 +1090,7 @@
         return this.render();
       }
       if (!cmd) return this.render();
-      if (cmd === "title") return this.start();
+      if (cmd === "title") return this.start(0);
       if (cmd === "card") {
         this.showCard();
         return this.render();
@@ -860,43 +1108,59 @@
 
       const r = t.runShell(line);
       if (!r) return this.render();
-      if (!this.inChallenge) this.onStep(cmd);
+      if (!this.inChallenge) this.onStep(cmd, r);
       else this.onChallenge(r);
       this.render();
     }
 
-    onStep(cmd) {
+    onStep(cmd, r) {
       const step = this.card.steps[this.step];
-      if (cmd.replace(/\s+/g, " ") === step.run) {
+      if (!r.err && followsExample(cmd, step.run)) {
         this.term.html(`<span class="c-green">✓</span> ${md(step.after)}`, "demo-after");
         this.step++;
+        this.stepMisses = 0;
         this.hints = 0;
-        if (this.inChallenge) {
-          // お題の前に、こっそり別のディレクトリへ移動させる(cd ~/{{place}})
-          this.shell.run(`cd ~/${this.place}`);
-        }
-      } else {
+        this.enterStage();
+        return;
+      }
+      if (++this.stepMisses >= REMIND_AFTER) {
+        this.stepMisses = 0;
         this.feedback = [`自由に試して大丈夫です。先へ進むには \`${step.run}\` と打ってください。`, true];
       }
     }
 
     onChallenge(r) {
       const ch = this.card.challenge;
-      const ref = new Shell(this.shell.fs, `/home/you/${this.place}`).run(ch.solution).out;
-      const tokens = (s) => s.trim().split(/\s+/).join(" ");
-      const used = r.stages.some((s) => s[0] === this.card.command);
-      const resultOk = !r.err && tokens(r.out) === tokens(ref);
-      if (resultOk && used) {
+      const command = this.card.command;
+      const used = r.stages.some((s) => s[0] === command);
+      if (used) this.used.add(command);
+      let resultOk;
+      let usesOk;
+      let problem;
+      if (ch.check === "cwd") {
+        // 場所で判定するお題は、何手かに分けて移動してもよい
+        resultOk = this.shell.cwd === this.reference.cwd;
+        usesOk = this.used.has(command);
+        problem = "いまいる場所が、お題と違うようです。";
+      } else {
+        const tokens = (s) => s.trim().split(/\s+/).join(" ");
+        resultOk = !r.err && tokens(r.out) === tokens(this.reference.out);
+        usesOk = used;
+        problem = "お題の答えとは、出力が違うようです。";
+      }
+      if (resultOk && usesOk) {
         this.step++;
         const t = this.term;
-        t.html(`<span class="c-green"><b>正解!</b></span>  <span class="c-cyan">${this.card.command}</span> <span class="c-green">をおぼえた</span>`, "demo-after");
+        t.html(`<span class="c-green"><b>正解!</b></span>  <span class="c-cyan">${command}</span> <span class="c-green">をおぼえた</span>`, "demo-after");
         t.html(md(ch.done), "indent");
         t.html(`<span class="c-dim">●○○○○  忘れかけた頃にもう一度。次の復習は明日です。</span>`, "indent demo-after");
         return;
       }
       this.misses++;
-      if (resultOk) this.feedback = [`結果は合っています。ここでは \`${this.card.command}\` を使って出してみましょう。`, false];
-      else if (used) this.feedback = [`${this.card.command} は使えています。お題の答えとは、出力が違うようです。`, false];
+      // 目的地へ向かう途中のディレクトリにいる。1 つずつ移動している最中なので、間違いではない
+      if (ch.check === "cwd" && this.reference.cwd.startsWith(this.shell.cwd.replace(/\/$/, "") + "/")) return;
+      if (resultOk) this.feedback = [`結果は合っています。ここでは \`${command}\` を使って出してみましょう。`, false];
+      else if (used) this.feedback = [`${command} は使えています。${problem}`, false];
       else if (this.misses % SUGGEST_HINT_AFTER === 0) this.feedback = ["行き詰まったら `hint` と打つとヒントが出ます。", true];
     }
   }
@@ -1260,7 +1524,7 @@ http {
       return (
         `<div class="demo-cta">` +
         `<div class="demo-cta-head">お試し版はここまでです。続きは、下の GitHub リポジトリをそれぞれ clone してお試しください。</div>` +
-        `<p>次のコマンドは <code>ls</code>。day-one には、<code>ls</code> から <code>vim</code> まで、あと <b>37 個</b> のコマンドがあります。覚えたコマンドは、1 日 → 3 日 → 7 日 → 14 日 → 30 日の間隔で復習が回ってきます。</p>` +
+        `<p>次のコマンドは <code>tail</code>。day-one には、<code>tail</code> から <code>vim</code> まで、あと <b>33 個</b> のコマンドがあります。覚えたコマンドは、1 日 → 3 日 → 7 日 → 14 日 → 30 日の間隔で復習が回ってきます。</p>` +
         `<div class="demo-cta-actions"><a class="btn" href="#clone">./clone.sh</a><button type="button" class="btn ghost" data-switch="oncall">oncall のお試しへ ▸</button><button type="button" class="btn ghost" data-restart>もう一度</button></div>` +
         `</div>`
       );
@@ -1322,7 +1586,8 @@ http {
       term.input.focus({ preventScroll: true });
     }
     if (e.target.closest("[data-restart]")) {
-      term.app.start();
+      // day-one は最初のカード(pwd)からやり直す
+      term.app.start(0);
       term.input.focus({ preventScroll: true });
     }
   });
